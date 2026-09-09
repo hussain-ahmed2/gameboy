@@ -1,7 +1,7 @@
 /**
  * @file gameboy-shell.tsx
  * @description Main GameBoy DMG shell wrapper component.
- *   Renders the grey brick body with rounded corners, screen bezel,
+ *   Renders the colorful body with rounded corners, screen bezel,
  *   label, speaker, and control area.
  */
 
@@ -25,7 +25,7 @@ export function GameBoyShell({ isRunning = false, children, className }: GameBoy
       className={cn(
         'relative flex flex-col',
         'bg-shell rounded-[24px] p-6 pb-8',
-        'shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.15)]',
+        'shadow-[0_8px_32px_rgba(126,200,227,0.3),inset_0_1px_0_rgba(255,255,255,0.3)]',
         'w-[320px] max-w-full',
         className
       )}
@@ -35,8 +35,10 @@ export function GameBoyShell({ isRunning = false, children, className }: GameBoy
         <div
           data-testid="power-led"
           className={cn(
-            'w-2 h-2 rounded-full',
-            isRunning ? 'bg-led shadow-[0_0_8px_#ff0000]' : 'bg-shell-dark'
+            'w-2 h-2 rounded-full transition-all duration-300',
+            isRunning
+              ? 'bg-led shadow-[0_0_8px_#48bb78,0_0_16px_#48bb78]'
+              : 'bg-shell-dark'
           )}
         />
       </div>
@@ -49,11 +51,8 @@ export function GameBoyShell({ isRunning = false, children, className }: GameBoy
         {children}
       </div>
 
-      {/* Bottom area: speaker + brand text */}
-      <div className="mt-4 flex items-center justify-between">
-        <p className="font-pixel text-[7px] text-shell-dark opacity-60">
-          Nintendo
-        </p>
+      {/* Bottom area: speaker */}
+      <div className="mt-4 flex items-center justify-end">
         <ShellSpeaker />
       </div>
     </div>

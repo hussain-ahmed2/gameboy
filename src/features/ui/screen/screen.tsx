@@ -1,13 +1,13 @@
 /**
  * @file screen.tsx
  * @description Main GameBoy LCD screen component.
- *   Renders a 160x144 canvas scaled up with CSS, with scanline overlay
- *   and bezel frame. Accepts a framebuffer to render each frame.
+ *   Renders a 160x144 canvas scaled to fill the bezel, with scanline overlay.
+ *   Uses a requestAnimationFrame loop to continuously render the framebuffer.
  */
 
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from '@/lib/constants';
 import { renderFramebuffer } from './canvas-renderer';
 import { ScanlineOverlay } from './scanline-overlay';
@@ -26,28 +26,35 @@ interface ScreenProps {
 
 export function Screen({ framebuffer, gameLoaded, className }: ScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !framebuffer) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    renderFramebuffer(ctx, framebuffer);
-  }, [framebuffer]);
+  const fbRef = useRef(framebuffer);
+  fbRef.current = framebuffer;
 
   useEffect(() => {
-    draw();
-  }, [draw]);
+    if (!gameLoaded) return;
+
+    let animId: number;
+    const render = () => {
+      const canvas = canvasRef.current;
+      const fb = fbRef.current;
+      if (canvas && fb) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) renderFramebuffer(ctx, fb);
+      }
+      animId = requestAnimationFrame(render);
+    };
+    animId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animId);
+  }, [gameLoaded]);
 
   return (
     <ScreenBezel>
-      <div className={cn('relative', className)}>
+      <div className={cn('relative w-full h-full', className)}>
         {gameLoaded ? (
           <canvas
             ref={canvasRef}
             width={SCREEN_WIDTH}
             height={SCREEN_HEIGHT}
-            className="block w-[160px] h-[144px] image-rendering-pixelated"
+            className="block w-full h-full"
             style={{ imageRendering: 'pixelated' }}
           />
         ) : (

@@ -12,7 +12,6 @@ import { Screen } from '@/features/ui/screen';
 import { DPad, ActionButtons, MetaButtons, TouchHandler } from '@/features/ui/controls';
 import { Toolbar } from '@/features/ui/toolbar';
 import { FPSCounter, GameInfo } from '@/features/ui/status';
-import { getAllGames } from '@/engine/games';
 
 function GameBoyContent() {
   const {
@@ -21,17 +20,13 @@ function GameBoyContent() {
     framebuffer,
     fps,
     currentGameId,
-    gameInfo,
     handleButtonChange,
     loadGame,
-    start,
     pause,
     resume,
     reset,
     setVolume,
   } = useEngineContext();
-
-  const games = getAllGames();
 
   return (
     <main className="min-h-screen bg-bg flex flex-col items-center justify-center p-4">

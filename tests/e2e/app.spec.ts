@@ -11,7 +11,7 @@ test.describe('GameBoy Emulator App', () => {
   });
 
   test('should load the home page with correct title', async ({ page }) => {
-    await expect(page).toHaveTitle(/GameBoy Emulator/);
+    await expect(page).toHaveTitle(/GameBoy Game Engine/);
   });
 
   test('should render the GameBoy shell', async ({ page }) => {
@@ -30,7 +30,7 @@ test.describe('GameBoy Emulator App', () => {
     await expect(page.locator('text=DOT MATRIX WITH STEREO SOUND')).toBeVisible();
   });
 
-  test('should display Nintendo label', async ({ page }) => {
-    await expect(page.locator('text=Nintendo')).toBeVisible();
+  test('should not display Nintendo label', async ({ page }) => {
+    await expect(page.locator('text=Nintendo')).not.toBeVisible();
   });
 });

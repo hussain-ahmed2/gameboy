@@ -1,6 +1,6 @@
 /**
  * @file volume-slider.tsx
- * @description Audio volume control slider.
+ * @description Audio volume control with fun styling.
  */
 
 import { useCallback } from 'react';
@@ -23,9 +23,19 @@ export function VolumeSlider({ volume, onVolumeChange, className }: VolumeSlider
     [onVolumeChange]
   );
 
+  const volumeIcon = volume === 0 ? '\u{1F507}' : volume < 0.5 ? '\u{1F509}' : '\u{1F50A}';
+
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      <span className="font-pixel text-[7px] text-shell-dark">VOL</span>
+    <div
+      className={cn(
+        'flex items-center gap-2 px-3 py-2 rounded-full',
+        'bg-shell-dark/50',
+        className
+      )}
+    >
+      <span className="text-sm" role="img" aria-hidden="true">
+        {volumeIcon}
+      </span>
       <input
         type="range"
         min="0"
@@ -34,7 +44,7 @@ export function VolumeSlider({ volume, onVolumeChange, className }: VolumeSlider
         value={volume}
         onChange={handleChange}
         aria-label="Volume"
-        className="w-20 h-1 accent-shell-dark"
+        className="w-16 h-1 accent-accent cursor-pointer"
       />
     </div>
   );

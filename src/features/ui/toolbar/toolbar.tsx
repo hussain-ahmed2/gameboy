@@ -4,7 +4,6 @@
  *   Pause/Resume, Reset, Volume slider, Fullscreen.
  */
 
-import { getAllGames } from '@/engine/games';
 import { GameSelector } from './game-selector';
 import { PauseButton } from './pause-button';
 import { ResetButton } from './reset-button';
@@ -45,15 +44,20 @@ export function Toolbar({
     <div
       data-testid="toolbar"
       className={cn(
-        'flex flex-wrap items-center justify-center gap-3 mt-4',
+        'flex flex-col items-center gap-4 mt-4',
         className
       )}
     >
+      {/* Game Selector Cards */}
       <GameSelector currentGame={currentGame} onChange={onGameChange} />
-      <PauseButton isPaused={isPaused} onTogglePause={onPause} />
-      <ResetButton onReset={onReset} />
-      <VolumeSlider volume={volume} onVolumeChange={onVolumeChange} />
-      <FullscreenButton />
+
+      {/* Control Buttons */}
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <PauseButton isPaused={isPaused} onTogglePause={onPause} />
+        <ResetButton onReset={onReset} />
+        <VolumeSlider volume={volume} onVolumeChange={onVolumeChange} />
+        <FullscreenButton />
+      </div>
     </div>
   );
 }

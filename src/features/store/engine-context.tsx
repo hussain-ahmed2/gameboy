@@ -6,11 +6,10 @@
 
 'use client';
 
-import { createContext, useContext, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import { useEngine } from '@/hooks';
 
 interface EngineContextType {
-  currentGame: ReturnType<typeof useEngine>['currentGame'];
   currentGameId: string;
   gameInfo: ReturnType<typeof useEngine>['gameInfo'];
   isRunning: boolean;
@@ -35,15 +34,8 @@ interface EngineProviderProps {
 export function EngineProvider({ children }: EngineProviderProps) {
   const engine = useEngine();
 
-  const value: EngineContextType = {
-    ...engine,
-    handleButtonChange: useCallback((button: string, pressed: boolean) => {
-      engine.handleButtonChange(button, pressed);
-    }, [engine]),
-  };
-
   return (
-    <EngineContext.Provider value={value}>
+    <EngineContext.Provider value={engine}>
       {children}
     </EngineContext.Provider>
   );

@@ -1,10 +1,18 @@
 /**
  * @file game-selector.tsx
- * @description Dropdown to switch between built-in games.
+ * @description Interactive game selector using visual cards
+ *   instead of a dropdown. Displays game icons with hover effects.
  */
 
 import { cn } from '@/lib/cn';
 import { getAllGames } from '@/engine/games';
+import { GameCard } from './game-card';
+
+const GAME_ICONS: Record<string, string> = {
+  pong: '\u{1F3D3}',
+  snake: '\u{1F40D}',
+  platformer: '\u{1F3C3}',
+};
 
 interface GameSelectorProps {
   /** Currently selected game ID */
@@ -19,21 +27,22 @@ export function GameSelector({ currentGame, onChange, className }: GameSelectorP
   const games = getAllGames();
 
   return (
-    <select
-      value={currentGame}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(
-        'px-3 py-2 bg-lcd-dark text-lcd-light font-pixel text-[8px] rounded',
-        'border border-bezel focus:outline-none focus:ring-2 focus:ring-lcd-med',
-        className
-      )}
+    <div
+      className={cn('flex items-center gap-3', className)}
+      role="radiogroup"
       aria-label="Select game"
     >
       {games.map((game) => (
-        <option key={game.id} value={game.id}>
-          {game.name}
-        </option>
+        <GameCard
+          key={game.id}
+          gameId={game.id}
+          name={game.name}
+          description={game.description}
+          icon={GAME_ICONS[game.id] || '\u{1F3AE}'}
+          isSelected={currentGame === game.id}
+          onClick={() => onChange(game.id)}
+        />
       ))}
-    </select>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 /**
  * @file fullscreen-button.tsx
- * @description Fullscreen toggle button.
+ * @description Fullscreen toggle button with fun styling.
  */
 
 import { useCallback } from 'react';
@@ -24,13 +24,20 @@ export function FullscreenButton({ className }: FullscreenButtonProps) {
     <button
       onClick={toggleFullscreen}
       className={cn(
-        'px-3 py-2 bg-lcd-dark text-lcd-light font-pixel text-[8px] rounded',
-        'hover:bg-lcd-med transition-colors',
+        'flex items-center gap-1.5 px-3 py-2 rounded-full',
+        'bg-shell-dark text-white/80 font-pixel text-[8px]',
+        'transition-all duration-200',
+        'hover:bg-shell-dark/80 hover:text-white',
+        'active:scale-95',
+        'select-none cursor-pointer',
         className
       )}
       aria-label="Toggle fullscreen"
     >
-      ☐
+      <span className="text-sm" role="img" aria-hidden="true">
+        {'\u{26F6}'}
+      </span>
+      Full
     </button>
   );
 }

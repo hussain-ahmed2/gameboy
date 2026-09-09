@@ -11,7 +11,6 @@ import { createGame, getAllGames, type GameInfo } from '@/engine/games';
 import type { Game, GamePadState, Renderer as RendererType } from '@/engine/api';
 
 interface UseEngineReturn {
-  currentGame: Game | null;
   currentGameId: string;
   gameInfo: GameInfo | null;
   isRunning: boolean;
@@ -50,7 +49,6 @@ const initialGamepad: GamePadState = {
  * @returns Engine control interface
  */
 export function useEngine(): UseEngineReturn {
-  const [currentGame, setCurrentGame] = useState<Game | null>(null);
   const [currentGameId, setCurrentGameId] = useState<string>('pong');
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -66,7 +64,7 @@ export function useEngine(): UseEngineReturn {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const frameCountRef = useRef(0);
-  const lastFpsTimeRef = useRef(performance.now());
+  const lastFpsTimeRef = useRef(0);
   const gamepadRef = useRef<GamePadState>({ ...initialGamepad });
 
   // Initialize engine on mount
@@ -100,8 +98,8 @@ export function useEngine(): UseEngineReturn {
         renderer.clear(0);
         game.draw(renderer);
         
-        // Update framebuffer state
-        setFramebuffer(renderer.getFramebuffer());
+        // Copy framebuffer so React always gets a new reference
+        setFramebuffer(new Uint8Array(renderer.getFramebuffer()));
       }
     })();
 
@@ -140,7 +138,6 @@ export function useEngine(): UseEngineReturn {
     const info = getAllGames().find(g => g.id === gameId);
     
     gameRef.current = game;
-    setCurrentGame(game);
     setCurrentGameId(gameId);
     setGameInfo(info ? { id: gameId, name: info.name, description: info.description } : null);
     
@@ -222,7 +219,6 @@ export function useEngine(): UseEngineReturn {
   }, []);
 
   return {
-    currentGame: gameRef.current,
     currentGameId,
     gameInfo,
     isRunning,

@@ -1,19 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  /* DMG GameBoy Color Palette */
-  --shell: #c8c4be;
-  --shell-dark: #a09c94;
-  --bezel: #6b6a66;
+  /* Colorful GameBoy Palette */
+  --shell: #7ec8e3;
+  --shell-dark: #5ba3c9;
+  --bezel: #2d3748;
   --lcd-light: #9bbc0f;
   --lcd-med: #8bac0f;
   --lcd-dark: #306230;
   --lcd-darkest: #0f380f;
-  --btn-ab: #4a1a2e;
-  --btn-meta: #6b5b5b;
-  --dpad: #2a2a2a;
-  --led: #ff0000;
-  --bg: #0a0a0a;
+  --btn-ab: #e53e3e;
+  --btn-ab-hover: #c53030;
+  --btn-meta: #a0aec0;
+  --btn-meta-hover: #cbd5e0;
+  --dpad: #1a202c;
+  --dpad-hover: #2d3748;
+  --led: #48bb78;
+  --bg: #1a1a2e;
+  --accent: #9f7aea;
+  --accent-glow: rgba(159, 122, 234, 0.4);
 }
 
 @theme inline {
@@ -25,10 +30,14 @@
   --color-lcd-dark: var(--lcd-dark);
   --color-lcd-darkest: var(--lcd-darkest);
   --color-btn-ab: var(--btn-ab);
+  --color-btn-ab-hover: var(--btn-ab-hover);
   --color-btn-meta: var(--btn-meta);
+  --color-btn-meta-hover: var(--btn-meta-hover);
   --color-dpad: var(--dpad);
+  --color-dpad-hover: var(--dpad-hover);
   --color-led: var(--led);
   --color-bg: var(--bg);
+  --color-accent: var(--accent);
   --font-pixel: var(--font-press-start);
   --font-mono: var(--font-geist-mono);
 }

@@ -6,7 +6,7 @@
 
 export function BootScreen() {
   return (
-    <div className="flex flex-col items-center justify-center w-[160px] h-[144px] bg-lcd-light">
+    <div className="flex flex-col items-center justify-center w-full h-full bg-lcd-light">
       <p className="font-pixel text-[8px] text-lcd-darkest text-center leading-relaxed">
         SELECT
         <br />

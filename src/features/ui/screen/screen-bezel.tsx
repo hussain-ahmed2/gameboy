@@ -1,7 +1,7 @@
 /**
  * @file screen-bezel.tsx
  * @description Dark border frame around the GameBoy LCD screen.
- *   Provides the inset shadow effect of the DMG screen housing.
+ *   Provides the inset shadow effect and enforces 10:9 aspect ratio.
  */
 
 import { cn } from '@/lib/cn';
@@ -19,7 +19,8 @@ export function ScreenBezel({ children, className }: ScreenBezelProps) {
       data-testid="screen-bezel"
       className={cn(
         'relative bg-bezel rounded-lg p-3',
-        'shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]',
+        'shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]',
+        'aspect-[10/9]',
         className
       )}
     >
