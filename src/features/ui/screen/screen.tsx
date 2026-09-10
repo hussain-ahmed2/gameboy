@@ -51,7 +51,7 @@ export function Screen({ framebuffer, gameLoaded, className }: ScreenProps) {
           width={SCREEN_WIDTH}
           height={SCREEN_HEIGHT}
           className="block"
-          style={{ imageRendering: 'pixelated', width: '320px', height: '288px' }}
+          style={{ imageRendering: 'pixelated', width: `${SCREEN_WIDTH}px`, height: `${SCREEN_HEIGHT}px` }}
         />
         <ScanlineOverlay />
       </div>
