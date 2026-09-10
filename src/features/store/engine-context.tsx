@@ -8,6 +8,7 @@
 
 import { createContext, useContext, type ReactNode } from 'react';
 import { useEngine } from '@/hooks';
+import type { EngineState, GameOverInfo } from '@/engine/core/EngineStateMachine';
 
 interface EngineContextType {
   currentGameId: string;
@@ -16,11 +17,14 @@ interface EngineContextType {
   isPaused: boolean;
   framebuffer: Uint8Array | null;
   fps: number;
+  engineState: EngineState;
+  gameOverInfo: GameOverInfo | null;
   loadGame: (gameId: string) => void;
   start: () => void;
   pause: () => void;
   resume: () => void;
   reset: () => void;
+  goToMenu: () => void;
   handleButtonChange: (button: string, pressed: boolean) => void;
   setVolume: (volume: number) => void;
 }

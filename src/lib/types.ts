@@ -36,18 +36,30 @@ export interface SpriteFrame {
   duration: number;
 }
 
+/** Color index for DMG palette */
+export type ColorIndex = 0 | 1 | 2 | 3;
+
 /** Tile definition for tilemaps */
 export interface Tile {
   index: number;
   solid: boolean;
-  colorIndex?: 0 | 1 | 2 | 3;
+  colorIndex?: ColorIndex;
 }
 
 /** Game interface for the engine */
 export interface Game {
+  readonly gameId: string;
   init(): void;
   update(input: GamePadState, deltaTime: number): void;
   draw(renderer: Renderer): void;
+  getScore(): number;
+  getHighScore(): number;
+  isGameOver(): boolean;
+  saveState(): object;
+  loadState(state: object): void;
+  hasSaveState(): boolean;
+  saveToStorage(): void;
+  loadFromStorage(): boolean;
   onStart?(): void;
   onPause?(): void;
   onResume?(): void;
@@ -56,11 +68,14 @@ export interface Game {
 
 /** Renderer interface for drawing */
 export interface Renderer {
-  clear(colorIndex: 0 | 1 | 2 | 3): void;
+  clear(colorIndex: ColorIndex): void;
   drawSprite(sprite: Sprite): void;
   drawTileMap(tileMap: TileMap): void;
-  drawRect(x: number, y: number, w: number, h: number, colorIndex: 0 | 1 | 2 | 3): void;
-  drawText(text: string, x: number, y: number, colorIndex: 0 | 1 | 2 | 3, fontSize?: number): void;
+  drawRect(x: number, y: number, w: number, h: number, colorIndex: ColorIndex): void;
+  drawText(text: string, x: number, y: number, colorIndex?: ColorIndex): void;
+  drawTextCentered(text: string, y: number, colorIndex?: ColorIndex): void;
+  drawLine(x: number, y: number, length: number, colorIndex: ColorIndex): void;
+  measureText(text: string): number;
   getFramebuffer(): Uint8Array;
 }
 
@@ -75,8 +90,11 @@ export interface Sprite {
   frameTimer: number;
   flipX: boolean;
   flipY: boolean;
-  colorIndex: 0 | 1 | 2 | 3;
+  colorIndex: ColorIndex;
   visible: boolean;
+  width: number;
+  height: number;
+  collidesWith(other: Sprite): boolean;
   update(deltaTime: number): void;
   draw(renderer: Renderer): void;
   setAnimation(frames: SpriteFrame[]): void;

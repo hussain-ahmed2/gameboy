@@ -6,6 +6,14 @@
 
 import { SCREEN_WIDTH, SCREEN_HEIGHT, DMG_PALETTE, type ColorIndex } from '@/lib/constants';
 import type { Sprite, TileMap, SpriteFrame } from '@/lib/types';
+import {
+  drawText as bmDrawText,
+  drawTextCentered as bmDrawTextCentered,
+  drawRect as bmDrawRect,
+  measureText,
+  CHAR_WIDTH,
+  CHAR_SPACING,
+} from './BitmapFont';
 
 export class Renderer {
   private canvas: HTMLCanvasElement;
@@ -45,27 +53,8 @@ export class Renderer {
 
     const sw = frame.w;
     const sh = frame.h;
-    const sx = frame.x;
-    const sy = frame.y;
 
-    // For now, draw as a colored rectangle (placeholder for tileset)
-    // In a full implementation, this would sample from a tileset image
-    const color = DMG_PALETTE[sprite.colorIndex];
-
-    this.ctx.fillStyle = color;
-    this.ctx.save();
-
-    if (sprite.flipX || sprite.flipY) {
-      this.ctx.translate(sprite.x + sw / 2, sprite.y + sh / 2);
-      this.ctx.scale(sprite.flipX ? -1 : 1, sprite.flipY ? -1 : 1);
-      this.ctx.fillRect(-sw / 2, -sh / 2, sw, sh);
-    } else {
-      this.ctx.fillRect(sprite.x, sprite.y, sw, sh);
-    }
-
-    this.ctx.restore();
-
-    // Also update framebuffer for save states
+    // Update framebuffer for save states
     this.drawSpriteToFramebuffer(sprite, frame);
   }
 
@@ -98,9 +87,6 @@ export class Renderer {
         const y = ty * tileMap.tileSize;
         const colorIndex = tile.colorIndex ?? 3;
 
-        this.ctx.fillStyle = DMG_PALETTE[colorIndex];
-        this.ctx.fillRect(x, y, tileMap.tileSize, tileMap.tileSize);
-
         // Update framebuffer
         for (let py = 0; py < tileMap.tileSize; py++) {
           const fy = y + py;
@@ -118,32 +104,35 @@ export class Renderer {
 
   /** Draw a filled rectangle */
   drawRect(x: number, y: number, w: number, h: number, colorIndex: ColorIndex): void {
-    this.ctx.fillStyle = DMG_PALETTE[colorIndex];
-    this.ctx.fillRect(x, y, w, h);
-
-    // Update framebuffer
-    const startX = Math.max(0, Math.floor(x));
-    const startY = Math.max(0, Math.floor(y));
-    const endX = Math.min(SCREEN_WIDTH, startX + Math.ceil(w));
-    const endY = Math.min(SCREEN_HEIGHT, startY + Math.ceil(h));
-
-    for (let y = startY; y < endY; y++) {
-      const base = y * SCREEN_WIDTH;
-      for (let x = startX; x < endX; x++) {
-        this.framebuffer[base + x] = colorIndex;
-      }
-    }
+    bmDrawRect(this.framebuffer, x, y, w, h, colorIndex);
   }
 
-  /** Draw text (simplified - draws as rectangles for now) */
-  drawText(text: string, x: number, y: number, colorIndex: ColorIndex, fontSize = 8): void {
-    // Simplified: draw each character as a 5x7 pixel block
-    const charW = fontSize * 0.6;
-    const charH = fontSize;
+  /** Draw text using bitmap font */
+  drawText(text: string, x: number, y: number, colorIndex: ColorIndex = 3): void {
+    bmDrawText(this.framebuffer, text.toUpperCase(), x, y, colorIndex);
+  }
 
-    for (let i = 0; i < text.length; i++) {
-      this.drawRect(x + i * charW, y, charW, charH, colorIndex);
-    }
+  /** Draw centered text using bitmap font */
+  drawTextCentered(text: string, y: number, colorIndex: ColorIndex = 3): void {
+    bmDrawTextCentered(this.framebuffer, text.toUpperCase(), y, colorIndex);
+  }
+
+  /** Measure text width in pixels */
+  measureText(text: string): number {
+    return measureText(text);
+  }
+
+  /** Draw a horizontal line */
+  drawLine(x: number, y: number, length: number, colorIndex: ColorIndex): void {
+    bmDrawRect(this.framebuffer, x, y, length, 1, colorIndex);
+  }
+
+  /** Draw a selection arrow (►) */
+  drawArrow(x: number, y: number, colorIndex: ColorIndex = 3): void {
+    // Simple arrow: 5x5 pixels
+    bmDrawRect(this.framebuffer, x, y + 1, 3, 1, colorIndex);
+    bmDrawRect(this.framebuffer, x + 1, y, 3, 1, colorIndex);
+    bmDrawRect(this.framebuffer, x + 1, y + 2, 3, 1, colorIndex);
   }
 
   /** Get the current framebuffer (color indices 0-3) */

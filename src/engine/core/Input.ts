@@ -34,6 +34,8 @@ const buttonToKey: Record<string, keyof GamePadState> = {
 export class Input {
   private state: GamePadState = { ...initialState };
   private previousState: GamePadState = { ...initialState };
+  private justPressedBuffer: GamePadState = { ...initialState };
+  private justReleasedBuffer: GamePadState = { ...initialState };
   private keyboardHandlersAttached = false;
   private touchHandlersAttached = false;
 
@@ -61,23 +63,32 @@ export class Input {
       const el = getButtonElement(btn);
       if (!el) return;
 
-      const handlePress = (e: TouchEvent) => {
+      const handleTouchPress = (e: TouchEvent) => {
         e.preventDefault();
         this.setButton(btn, true);
       };
-      const handleRelease = (e: TouchEvent) => {
+      const handleTouchRelease = (e: TouchEvent) => {
         e.preventDefault();
         this.setButton(btn, false);
       };
 
-      el.addEventListener('touchstart', handlePress, { passive: false });
-      el.addEventListener('touchend', handleRelease, { passive: false });
-      el.addEventListener('touchcancel', handleRelease, { passive: false });
+      const handleMousePress = (e: MouseEvent) => {
+        e.preventDefault();
+        this.setButton(btn, true);
+      };
+      const handleMouseRelease = (e: MouseEvent) => {
+        e.preventDefault();
+        this.setButton(btn, false);
+      };
+
+      el.addEventListener('touchstart', handleTouchPress, { passive: false });
+      el.addEventListener('touchend', handleTouchRelease, { passive: false });
+      el.addEventListener('touchcancel', handleTouchRelease, { passive: false });
       
       // Also support mouse for desktop testing
-      el.addEventListener('mousedown', handlePress);
-      el.addEventListener('mouseup', handleRelease);
-      el.addEventListener('mouseleave', handleRelease);
+      el.addEventListener('mousedown', handleMousePress);
+      el.addEventListener('mouseup', handleMouseRelease);
+      el.addEventListener('mouseleave', handleMouseRelease);
     });
   }
 
@@ -99,6 +110,12 @@ export class Input {
 
   /** Set a button's pressed state */
   setButton(button: keyof GamePadState, pressed: boolean): void {
+    if (pressed && !this.state[button]) {
+      this.justPressedBuffer[button] = true;
+    }
+    if (!pressed && this.state[button]) {
+      this.justReleasedBuffer[button] = true;
+    }
     this.state[button] = pressed;
   }
 
@@ -114,22 +131,26 @@ export class Input {
 
   /** Check if a button was just pressed this frame */
   isJustPressed(button: keyof GamePadState): boolean {
-    return this.state[button] && !this.previousState[button];
+    return this.justPressedBuffer[button];
   }
 
   /** Check if a button was just released this frame */
   isJustReleased(button: keyof GamePadState): boolean {
-    return !this.state[button] && this.previousState[button];
+    return this.justReleasedBuffer[button];
   }
 
   /** Call once per frame to update previous state for edge detection */
   update(): void {
     this.previousState = { ...this.state };
+    this.justPressedBuffer = { ...initialState };
+    this.justReleasedBuffer = { ...initialState };
   }
 
   /** Reset all buttons to released */
   reset(): void {
     this.state = { ...initialState };
     this.previousState = { ...initialState };
+    this.justPressedBuffer = { ...initialState };
+    this.justReleasedBuffer = { ...initialState };
   }
 }

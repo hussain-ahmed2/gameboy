@@ -3,10 +3,9 @@
  * @description Classic Pong game - two paddles, one ball, score to 11.
  */
 
-import { Game, Sprite, TileMap } from '@/engine/api';
-import type { Renderer, GamePadState, SpriteFrame } from '@/lib/types';
-import { Input } from '@/engine/core';
-import { Audio } from '@/engine/core';
+import { Game, Sprite } from '@/engine/api';
+import type { Renderer, GamePadState } from '@/lib/types';
+import { SaveState } from '@/engine/core';
 
 const PADDLE_WIDTH = 4;
 const PADDLE_HEIGHT = 24;
@@ -16,19 +15,39 @@ const BALL_BASE_SPEED = 50;
 const MAX_BALL_SPEED = 120;
 const WIN_SCORE = 11;
 
+const HIGHSCORE_KEY = 'pong_highscore';
+
+interface PongSaveState {
+  playerPaddle: { x: number; y: number };
+  aiPaddle: { x: number; y: number };
+  ball: { x: number; y: number; vx: number; vy: number };
+  playerScore: number;
+  aiScore: number;
+  ballSpeed: number;
+}
+
 export class PongGame extends Game {
+  readonly gameId = 'pong';
+
   private playerPaddle!: Sprite;
   private aiPaddle!: Sprite;
   private ball!: Sprite;
   private playerScore = 0;
   private aiScore = 0;
   private ballSpeed = BALL_BASE_SPEED;
-  private gameOver = false;
+  private _gameOver = false;
   private winner: 'player' | 'ai' | null = null;
   private flashTimer = 0;
   private flashVisible = true;
+  private highScore = 0;
 
   init(): void {
+    // Load high score
+    const saved = SaveState.load(HIGHSCORE_KEY);
+    if (typeof saved === 'number') {
+      this.highScore = saved;
+    }
+
     // Create player paddle (left)
     this.playerPaddle = new Sprite({
       x: 8,
@@ -57,15 +76,12 @@ export class PongGame extends Game {
     this.playerScore = 0;
     this.aiScore = 0;
     this.ballSpeed = BALL_BASE_SPEED;
-    this.gameOver = false;
+    this._gameOver = false;
     this.winner = null;
   }
 
   update(input: GamePadState, deltaTime: number): void {
-    if (this.gameOver) {
-      if (input.start && this.isJustPressed(input, 'start')) {
-        this.init();
-      }
+    if (this._gameOver) {
       return;
     }
 
@@ -83,7 +99,7 @@ export class PongGame extends Game {
     const aiDiff = ballCenter - aiCenter;
     
     if (Math.abs(aiDiff) > 4) {
-      const aiSpeed = PADDLE_SPEED * 0.7; // Slightly slower than player
+      const aiSpeed = PADDLE_SPEED * 0.7;
       if (aiDiff > 0 && this.aiPaddle.y < 144 - PADDLE_HEIGHT) {
         this.aiPaddle.y += Math.min(aiSpeed * deltaTime, aiDiff);
       } else if (aiDiff < 0 && this.aiPaddle.y > 0) {
@@ -99,11 +115,11 @@ export class PongGame extends Game {
     if (this.ball.y <= 0) {
       this.ball.y = 0;
       this.ball.vy = Math.abs(this.ball.vy);
-      Audio.prototype.beep.call(this.audio);
+      this.audio.beep();
     } else if (this.ball.y >= 144 - BALL_SIZE) {
       this.ball.y = 144 - BALL_SIZE;
       this.ball.vy = -Math.abs(this.ball.vy);
-      Audio.prototype.beep.call(this.audio);
+      this.audio.beep();
     }
 
     // Ball collision with player paddle
@@ -111,12 +127,11 @@ export class PongGame extends Game {
       this.ball.x = this.playerPaddle.x + PADDLE_WIDTH;
       this.ball.vx = Math.abs(this.ball.vx);
       
-      // Angle based on hit position
       const hitPos = (this.ball.y + BALL_SIZE / 2) - (this.playerPaddle.y + PADDLE_HEIGHT / 2);
       this.ball.vy = (hitPos / (PADDLE_HEIGHT / 2)) * this.ballSpeed * 0.8;
       
       this.increaseBallSpeed();
-      Audio.prototype.beep.call(this.audio);
+      this.audio.beep();
     }
 
     // Ball collision with AI paddle
@@ -128,20 +143,20 @@ export class PongGame extends Game {
       this.ball.vy = (hitPos / (PADDLE_HEIGHT / 2)) * this.ballSpeed * 0.8;
       
       this.increaseBallSpeed();
-      Audio.prototype.beep.call(this.audio);
+      this.audio.beep();
     }
 
     // Score check
     if (this.ball.x < 0) {
       this.aiScore++;
       this.checkWin();
-      if (!this.gameOver) this.resetBall();
-      Audio.prototype.boop.call(this.audio);
+      if (!this._gameOver) this.resetBall();
+      this.audio.boop();
     } else if (this.ball.x > 160) {
       this.playerScore++;
       this.checkWin();
-      if (!this.gameOver) this.resetBall();
-      Audio.prototype.boop.call(this.audio);
+      if (!this._gameOver) this.resetBall();
+      this.audio.boop();
     }
 
     // Flash effect on score
@@ -168,15 +183,48 @@ export class PongGame extends Game {
     }
 
     // Draw scores
-    renderer.drawText(`${this.playerScore}`, 30, 8, 3, 16);
-    renderer.drawText(`${this.aiScore}`, 120, 8, 3, 16);
+    renderer.drawText(`${this.playerScore}`, 60, 4, 3);
+    renderer.drawText(`${this.aiScore}`, 90, 4, 3);
+  }
 
-    // Draw game over message
-    if (this.gameOver) {
-      const msg = this.winner === 'player' ? 'PLAYER WINS!' : 'AI WINS!';
-      renderer.drawText(msg, 35, 64, 3, 12);
-      renderer.drawText('PRESS START', 40, 80, 2, 8);
-    }
+  getScore(): number {
+    return this.playerScore;
+  }
+
+  getHighScore(): number {
+    return Math.max(this.highScore, this.playerScore);
+  }
+
+  isGameOver(): boolean {
+    return this._gameOver;
+  }
+
+  saveState(): object {
+    return {
+      playerPaddle: { x: this.playerPaddle.x, y: this.playerPaddle.y },
+      aiPaddle: { x: this.aiPaddle.x, y: this.aiPaddle.y },
+      ball: { x: this.ball.x, y: this.ball.y, vx: this.ball.vx, vy: this.ball.vy },
+      playerScore: this.playerScore,
+      aiScore: this.aiScore,
+      ballSpeed: this.ballSpeed,
+    };
+  }
+
+  loadState(state: object): void {
+    const s = state as PongSaveState;
+    this.playerPaddle.x = s.playerPaddle.x;
+    this.playerPaddle.y = s.playerPaddle.y;
+    this.aiPaddle.x = s.aiPaddle.x;
+    this.aiPaddle.y = s.aiPaddle.y;
+    this.ball.x = s.ball.x;
+    this.ball.y = s.ball.y;
+    this.ball.vx = s.ball.vx;
+    this.ball.vy = s.ball.vy;
+    this.playerScore = s.playerScore;
+    this.aiScore = s.aiScore;
+    this.ballSpeed = s.ballSpeed;
+    this._gameOver = false;
+    this.winner = null;
   }
 
   private resetBall(): void {
@@ -184,8 +232,7 @@ export class PongGame extends Game {
     this.ball.y = 72;
     this.ballSpeed = BALL_BASE_SPEED;
     
-    // Random initial direction
-    const angle = (Math.random() - 0.5) * Math.PI / 2; // -45 to 45 degrees
+    const angle = (Math.random() - 0.5) * Math.PI / 2;
     const direction = Math.random() > 0.5 ? 1 : -1;
     this.ball.vx = Math.cos(angle) * this.ballSpeed * direction;
     this.ball.vy = Math.sin(angle) * this.ballSpeed;
@@ -202,21 +249,19 @@ export class PongGame extends Game {
 
   private checkWin(): void {
     if (this.playerScore >= WIN_SCORE) {
-      this.gameOver = true;
+      this._gameOver = true;
       this.winner = 'player';
+      if (this.playerScore > this.highScore) {
+        this.highScore = this.playerScore;
+        SaveState.save(HIGHSCORE_KEY, this.highScore);
+      }
     } else if (this.aiScore >= WIN_SCORE) {
-      this.gameOver = true;
+      this._gameOver = true;
       this.winner = 'ai';
     }
-    if (this.gameOver) {
+    if (this._gameOver) {
       this.flashTimer = 0.5;
       this.flashVisible = true;
     }
-  }
-
-  // Helper for edge detection (since we don't have previous input in this scope)
-  private isJustPressed(input: GamePadState, button: keyof GamePadState): boolean {
-    // Simplified - just check if pressed (for game over restart)
-    return input[button];
   }
 }

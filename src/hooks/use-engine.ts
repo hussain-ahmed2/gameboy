@@ -6,9 +6,11 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { GameLoop, Renderer, Input, Audio, SaveState } from '@/engine';
+import { GameLoop, Renderer, Input, Audio, EngineStateMachine, EngineState } from '@/engine';
 import { createGame, getAllGames, type GameInfo } from '@/engine/games';
-import type { Game, GamePadState, Renderer as RendererType } from '@/engine/api';
+import { Game } from '@/engine/api/Game';
+import type { GamePadState } from '@/lib/types';
+import type { GameOverInfo } from '@/engine/core/EngineStateMachine';
 
 interface UseEngineReturn {
   currentGameId: string;
@@ -17,93 +19,158 @@ interface UseEngineReturn {
   isPaused: boolean;
   framebuffer: Uint8Array | null;
   fps: number;
+  engineState: EngineState;
+  gameOverInfo: GameOverInfo | null;
   loadGame: (gameId: string) => void;
   start: () => void;
   pause: () => void;
   resume: () => void;
   reset: () => void;
+  goToMenu: () => void;
   handleButtonChange: (button: string, pressed: boolean) => void;
   setVolume: (volume: number) => void;
 }
 
-interface GameInfo {
-  id: string;
-  name: string;
-  description: string;
-}
-
-/** Initial gamepad state (all buttons released) */
 const initialGamepad: GamePadState = {
-  up: false,
-  down: false,
-  left: false,
-  right: false,
-  a: false,
-  b: false,
-  start: false,
-  select: false,
+  up: false, down: false, left: false, right: false,
+  a: false, b: false, start: false, select: false,
 };
 
-/**
- * Hook that manages the game engine lifecycle.
- * @returns Engine control interface
- */
 export function useEngine(): UseEngineReturn {
-  const [currentGameId, setCurrentGameId] = useState<string>('pong');
+  const [currentGameId, setCurrentGameId] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [framebuffer, setFramebuffer] = useState<Uint8Array | null>(null);
   const [fps, setFps] = useState(0);
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null);
+  const [engineState, setEngineState] = useState<EngineState>(EngineState.BOOT);
+  const [gameOverInfo, setGameOverInfo] = useState<GameOverInfo | null>(null);
 
   const gameLoopRef = useRef<GameLoop | null>(null);
-  const rendererRef = useRef<RendererType | null>(null);
+  const rendererRef = useRef<Renderer | null>(null);
   const inputRef = useRef<Input | null>(null);
   const audioRef = useRef<Audio | null>(null);
   const gameRef = useRef<Game | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const stateMachineRef = useRef<EngineStateMachine | null>(null);
 
   const frameCountRef = useRef(0);
   const lastFpsTimeRef = useRef(0);
   const gamepadRef = useRef<GamePadState>({ ...initialGamepad });
 
-  // Initialize engine on mount
   useEffect(() => {
-    // Create canvas for renderer
     const canvas = document.createElement('canvas');
     canvas.width = 160;
     canvas.height = 144;
     canvasRef.current = canvas;
 
-    rendererRef.current = new Renderer(canvas);
+    const rendererInstance = new Renderer(canvas);
+    rendererRef.current = rendererInstance;
     inputRef.current = new Input();
     audioRef.current = new Audio();
 
-    // Create game loop
+    const games = getAllGames();
+    stateMachineRef.current = new EngineStateMachine({
+      renderer: rendererInstance,
+      input: inputRef.current,
+      games,
+      currentGameId: '',
+      gameOverInfo: null,
+      onStateChange: (state) => {
+        setEngineState(state);
+      },
+      onGameSelect: (gameId) => {
+        const game = createGame(gameId);
+        if (!game) return;
+
+        const info = getAllGames().find(g => g.id === gameId);
+
+        gameRef.current = game;
+        setCurrentGameId(gameId);
+        setGameInfo(info ?? null);
+
+        game.renderer = rendererInstance;
+        game.input = inputRef.current!;
+        game.audio = audioRef.current!;
+        game.init();
+
+        setIsRunning(true);
+        setIsPaused(false);
+
+        game.loadFromStorage();
+        stateMachineRef.current?.transition(EngineState.PLAYING);
+      },
+      onGameResume: () => {
+        setIsPaused(false);
+        stateMachineRef.current?.transition(EngineState.PLAYING);
+      },
+      onGameRestart: () => {
+        if (gameRef.current) {
+          gameRef.current.onReset();
+          gameRef.current.init();
+        }
+        setIsPaused(false);
+        setGameOverInfo(null);
+        stateMachineRef.current?.transition(EngineState.PLAYING);
+      },
+      onGameMenu: () => {
+        setIsRunning(false);
+        setIsPaused(false);
+        setGameOverInfo(null);
+        stateMachineRef.current?.transition(EngineState.MENU);
+      },
+    });
+
     gameLoopRef.current = new (class extends GameLoop {
       update(deltaTime: number) {
-        const game = gameRef.current;
         const input = inputRef.current;
-        if (!game || !input) return;
+        const sm = stateMachineRef.current;
+        if (!input || !sm) return;
+
+        sm.update(deltaTime);
+
+        const state = sm.getState();
+        if (state === EngineState.PLAYING) {
+          const game = gameRef.current;
+          if (game) {
+            game.update(input.getState(), deltaTime);
+
+            if (game.isGameOver()) {
+              sm.captureGameFrame(rendererInstance.getFramebuffer());
+              const info = game.getGameOverData();
+              setGameOverInfo(info);
+              sm.transition(EngineState.GAME_OVER);
+            }
+          }
+        }
 
         input.update();
-        game.update(input.getState(), deltaTime);
       }
 
-      draw(interpolation: number) {
-        const game = gameRef.current;
+      draw(_interpolation: number) {
+        const sm = stateMachineRef.current;
         const renderer = rendererRef.current;
-        if (!game || !renderer) return;
+        if (!sm || !renderer) return;
 
-        renderer.clear(0);
-        game.draw(renderer);
-        
-        // Copy framebuffer so React always gets a new reference
+        const state = sm.getState();
+
+        if (state === EngineState.PLAYING) {
+          const game = gameRef.current;
+          if (game) {
+            renderer.clear(0);
+            game.draw(renderer);
+          }
+        } else if (state === EngineState.PAUSED || state === EngineState.GAME_OVER) {
+          // Draw game frame first, then overlay on top
+          sm.draw(_interpolation);
+        } else {
+          sm.draw(_interpolation);
+        }
+
         setFramebuffer(new Uint8Array(renderer.getFramebuffer()));
       }
     })();
 
-    // Initialize audio on first user interaction
     const initAudio = () => {
       audioRef.current?.resume();
       window.removeEventListener('click', initAudio);
@@ -114,6 +181,8 @@ export function useEngine(): UseEngineReturn {
     window.addEventListener('keydown', initAudio);
     window.addEventListener('touchstart', initAudio);
 
+    gameLoopRef.current.start();
+
     return () => {
       gameLoopRef.current?.stop();
       audioRef.current?.dispose();
@@ -123,33 +192,8 @@ export function useEngine(): UseEngineReturn {
     };
   }, []);
 
-  // Attach touch handlers when canvas is available
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas && inputRef.current) {
-      // Touch handlers will be attached by UI components
-    }
-  }, [canvasRef.current]);
-
   const loadGame = useCallback((gameId: string) => {
-    const game = createGame(gameId);
-    if (!game) return;
-
-    const info = getAllGames().find(g => g.id === gameId);
-    
-    gameRef.current = game;
-    setCurrentGameId(gameId);
-    setGameInfo(info ? { id: gameId, name: info.name, description: info.description } : null);
-    
-    // Initialize game with engine references
-    game.renderer = rendererRef.current!;
-    game.input = inputRef.current!;
-    game.audio = audioRef.current!;
-    game.init();
-
-    setIsRunning(true);
-    setIsPaused(false);
-    gameLoopRef.current?.start();
+    stateMachineRef.current?.onGameSelect(gameId);
   }, []);
 
   const start = useCallback(() => {
@@ -157,15 +201,19 @@ export function useEngine(): UseEngineReturn {
       gameRef.current.onStart();
       setIsRunning(true);
       setIsPaused(false);
-      gameLoopRef.current?.start();
+      stateMachineRef.current?.transition(EngineState.PLAYING);
     }
   }, []);
 
   const pause = useCallback(() => {
-    if (gameRef.current) {
+    const sm = stateMachineRef.current;
+    const renderer = rendererRef.current;
+    if (gameRef.current && sm && renderer && sm.getState() === EngineState.PLAYING) {
+      // Capture the current game frame before pausing
+      sm.captureGameFrame(renderer.getFramebuffer());
       gameRef.current.onPause();
       setIsPaused(true);
-      gameLoopRef.current?.stop();
+      sm.transition(EngineState.PAUSED);
     }
   }, []);
 
@@ -173,7 +221,7 @@ export function useEngine(): UseEngineReturn {
     if (gameRef.current) {
       gameRef.current.onResume();
       setIsPaused(false);
-      gameLoopRef.current?.start();
+      stateMachineRef.current?.transition(EngineState.PLAYING);
     }
   }, []);
 
@@ -181,11 +229,18 @@ export function useEngine(): UseEngineReturn {
     if (gameRef.current) {
       gameRef.current.onReset();
       gameRef.current.init();
-      setFramebuffer(null);
+      setGameOverInfo(null);
     }
     setIsRunning(true);
     setIsPaused(false);
-    gameLoopRef.current?.start();
+    stateMachineRef.current?.transition(EngineState.PLAYING);
+  }, []);
+
+  const goToMenu = useCallback(() => {
+    setIsRunning(false);
+    setIsPaused(false);
+    setGameOverInfo(null);
+    stateMachineRef.current?.transition(EngineState.MENU);
   }, []);
 
   const handleButtonChange = useCallback(
@@ -201,7 +256,6 @@ export function useEngine(): UseEngineReturn {
     audioRef.current?.setMasterVolume(volume);
   }, []);
 
-  // FPS calculation
   useEffect(() => {
     let frameId: number;
     const tick = () => {
@@ -219,19 +273,8 @@ export function useEngine(): UseEngineReturn {
   }, []);
 
   return {
-    currentGameId,
-    gameInfo,
-    isRunning,
-    isPaused,
-    framebuffer,
-    fps,
-    loadGame,
-    start,
-    pause,
-    resume,
-    reset,
-    handleButtonChange,
-    setVolume,
+    currentGameId, gameInfo, isRunning, isPaused, framebuffer, fps,
+    engineState, gameOverInfo, loadGame, start, pause, resume, reset,
+    goToMenu, handleButtonChange, setVolume,
   };
 }
-

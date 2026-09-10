@@ -4,37 +4,54 @@
  */
 
 import { Game, Sprite } from '@/engine/api';
-import type { Renderer, GamePadState, SpriteFrame } from '@/lib/types';
-import { Audio } from '@/engine/core';
+import type { Renderer, GamePadState } from '@/lib/types';
+import { Audio, SaveState } from '@/engine/core';
 
 const GRID_SIZE = 8;
 const GRID_WIDTH = 160 / GRID_SIZE;  // 20
 const GRID_HEIGHT = 144 / GRID_SIZE; // 18
-const INITIAL_LENGTH = 3;
 const BASE_SPEED = 150; // ms per move
 const SPEED_INCREASE = 0.95; // 5% faster per food
 const MIN_SPEED = 50;
+
+const HIGHSCORE_KEY = 'snake_highscore';
 
 interface Segment {
   x: number;
   y: number;
 }
 
+interface SnakeSaveState {
+  snake: Segment[];
+  direction: { x: number; y: number };
+  nextDirection: { x: number; y: number };
+  food: { x: number; y: number } | null;
+  score: number;
+  moveTimer: number;
+  moveInterval: number;
+}
+
 export class SnakeGame extends Game {
+  readonly gameId = 'snake';
+
   private snake: Segment[] = [];
   private direction: { x: number; y: number } = { x: 1, y: 0 };
   private nextDirection: { x: number; y: number } = { x: 1, y: 0 };
   private food: { x: number; y: number } | null = null;
-  private score = 0;
+  private _score = 0;
   private highScore = 0;
-  private gameOver = false;
+  private _gameOver = false;
   private moveTimer = 0;
   private moveInterval = BASE_SPEED;
   private foodBlinkTimer = 0;
   private foodVisible = true;
 
   init(): void {
-    this.highScore = SaveState.load('snake_highscore') as number || 0;
+    // Load high score
+    const saved = SaveState.load(HIGHSCORE_KEY);
+    if (typeof saved === 'number') {
+      this.highScore = saved;
+    }
     
     // Initialize snake in center
     this.snake = [
@@ -44,8 +61,8 @@ export class SnakeGame extends Game {
     ];
     this.direction = { x: 1, y: 0 };
     this.nextDirection = { x: 1, y: 0 };
-    this.score = 0;
-    this.gameOver = false;
+    this._score = 0;
+    this._gameOver = false;
     this.moveTimer = 0;
     this.moveInterval = BASE_SPEED;
     
@@ -53,10 +70,7 @@ export class SnakeGame extends Game {
   }
 
   update(input: GamePadState, deltaTime: number): void {
-    if (this.gameOver) {
-      if (input.start && this.isJustPressed(input, 'start')) {
-        this.init();
-      }
+    if (this._gameOver) {
       return;
     }
 
@@ -119,16 +133,16 @@ export class SnakeGame extends Game {
   }
 
   private eatFood(): void {
-    this.score++;
-    Audio.prototype.coin.call(this.audio);
+    this._score++;
+    this.audio.coin();
     
     // Increase speed
     this.moveInterval = Math.max(this.moveInterval * SPEED_INCREASE, MIN_SPEED);
     
     // Update high score
-    if (this.score > this.highScore) {
-      this.highScore = this.score;
-      SaveState.save('snake_highscore', this.highScore);
+    if (this._score > this.highScore) {
+      this.highScore = this._score;
+      SaveState.save(HIGHSCORE_KEY, this.highScore);
     }
     
     this.spawnFood();
@@ -146,8 +160,8 @@ export class SnakeGame extends Game {
   }
 
   private endGame(): void {
-    this.gameOver = true;
-    Audio.prototype.explosion.call(this.audio);
+    this._gameOver = true;
+    this.audio.explosion();
   }
 
   draw(renderer: Renderer): void {
@@ -177,20 +191,43 @@ export class SnakeGame extends Game {
     }
 
     // Draw score
-    renderer.drawText(`SCORE: ${this.score}`, 4, 4, 3, 8);
-    renderer.drawText(`HIGH: ${this.highScore}`, 90, 4, 2, 8);
-
-    // Draw game over
-    if (this.gameOver) {
-      renderer.drawText('GAME OVER', 45, 60, 3, 12);
-      renderer.drawText('PRESS START', 40, 76, 2, 8);
-    }
+    renderer.drawText(`SCORE:${this._score}`, 4, 4, 3);
+    renderer.drawText(`HIGH:${this.highScore}`, 90, 4, 2);
   }
 
-  private isJustPressed(input: GamePadState, button: keyof GamePadState): boolean {
-    return input[button];
+  getScore(): number {
+    return this._score;
+  }
+
+  getHighScore(): number {
+    return this.highScore;
+  }
+
+  isGameOver(): boolean {
+    return this._gameOver;
+  }
+
+  saveState(): object {
+    return {
+      snake: [...this.snake],
+      direction: { ...this.direction },
+      nextDirection: { ...this.nextDirection },
+      food: this.food ? { ...this.food } : null,
+      score: this._score,
+      moveTimer: this.moveTimer,
+      moveInterval: this.moveInterval,
+    };
+  }
+
+  loadState(state: object): void {
+    const s = state as SnakeSaveState;
+    this.snake = [...s.snake];
+    this.direction = { ...s.direction };
+    this.nextDirection = { ...s.nextDirection };
+    this.food = s.food ? { ...s.food } : null;
+    this._score = s.score;
+    this.moveTimer = s.moveTimer;
+    this.moveInterval = s.moveInterval;
+    this._gameOver = false;
   }
 }
-
-// Import SaveState
-import { SaveState } from '@/engine/core';

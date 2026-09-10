@@ -5,8 +5,7 @@
 
 import { Game, Sprite, TileMap } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
-import { Audio } from '@/engine/core';
-import { SaveState } from '@/engine/core';
+import { Audio, SaveState } from '@/engine/core';
 
 const GRAVITY = 400;
 const JUMP_VELOCITY = -180;
@@ -14,9 +13,12 @@ const MOVE_SPEED = 60;
 const MAX_FALL_SPEED = 200;
 const COYOTE_TIME = 0.1;
 const JUMP_BUFFER = 0.1;
+const TILE_SIZE = 8;
+
+const HIGHSCORE_KEY = 'platformer_highscore';
 
 interface Level {
-  tiles: number[][]; // 0=empty, 1=solid, 2=coin, 3=flag
+  tiles: number[][];
   coins: { x: number; y: number }[];
   flag: { x: number; y: number };
   spawnX: number;
@@ -24,7 +26,6 @@ interface Level {
 }
 
 const LEVELS: Level[] = [
-  // Level 1
   {
     tiles: [
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -50,7 +51,6 @@ const LEVELS: Level[] = [
     spawnX: 1,
     spawnY: 11,
   },
-  // Level 2
   {
     tiles: [
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -79,30 +79,53 @@ const LEVELS: Level[] = [
   },
 ];
 
-const TILE_SIZE = 8;
+interface PlatformerSaveState {
+  player: { x: number; y: number; vx: number; vy: number };
+  currentLevel: number;
+  coins: number;
+  cameraX: number;
+  onGround: boolean;
+  levelTiles: number[][];
+}
 
 export class PlatformerGame extends Game {
+  readonly gameId = 'platformer';
+
   private player!: Sprite;
   private level!: TileMap;
   private currentLevel = 0;
-  private coins = 0;
+  private _coins = 0;
   private totalCoins = 0;
   private cameraX = 0;
   private onGround = false;
   private coyoteTimer = 0;
   private jumpBufferTimer = 0;
-  private gameWon = false;
+  private _gameWon = false;
+  private _gameOver = false;
   private levelComplete = false;
   private levelCompleteTimer = 0;
+  private highScore = 0;
+  private levelTiles: number[][] = [];
 
   init(): void {
-    this.coins = 0;
+    // Load high score
+    const saved = SaveState.load(HIGHSCORE_KEY);
+    if (typeof saved === 'number') {
+      this.highScore = saved;
+    }
+
+    this._coins = 0;
     this.currentLevel = 0;
+    this._gameWon = false;
+    this._gameOver = false;
     this.loadLevel(0);
   }
 
   private loadLevel(levelIndex: number): void {
     const levelData = LEVELS[levelIndex];
+    
+    // Store level tiles for save state
+    this.levelTiles = levelData.tiles.map(row => [...row]);
     
     // Create tilemap
     this.level = new TileMap({ 
@@ -133,9 +156,9 @@ export class PlatformerGame extends Game {
       x: levelData.spawnX * TILE_SIZE,
       y: levelData.spawnY * TILE_SIZE,
       frames: [
-        { x: 0, y: 0, w: 8, h: 8, duration: 200 }, // idle
-        { x: 8, y: 0, w: 8, h: 8, duration: 100 }, // walk 1
-        { x: 16, y: 0, w: 8, h: 8, duration: 100 }, // walk 2
+        { x: 0, y: 0, w: 8, h: 8, duration: 200 },
+        { x: 8, y: 0, w: 8, h: 8, duration: 100 },
+        { x: 16, y: 0, w: 8, h: 8, duration: 100 },
       ],
     });
     this.player.width = 8;
@@ -158,13 +181,7 @@ export class PlatformerGame extends Game {
   }
 
   update(input: GamePadState, deltaTime: number): void {
-    if (this.gameWon) {
-      if (input.start && this.isJustPressed(input, 'start')) {
-        this.currentLevel = 0;
-        this.coins = 0;
-        this.loadLevel(0);
-        this.gameWon = false;
-      }
+    if (this._gameWon || this._gameOver) {
       return;
     }
 
@@ -173,7 +190,12 @@ export class PlatformerGame extends Game {
       if (this.levelCompleteTimer <= 0) {
         this.currentLevel++;
         if (this.currentLevel >= LEVELS.length) {
-          this.gameWon = true;
+          this._gameWon = true;
+          // Update high score
+          if (this._coins > this.highScore) {
+            this.highScore = this._coins;
+            SaveState.save(HIGHSCORE_KEY, this.highScore);
+          }
         } else {
           this.loadLevel(this.currentLevel);
         }
@@ -212,7 +234,7 @@ export class PlatformerGame extends Game {
       this.onGround = false;
       this.coyoteTimer = 0;
       this.jumpBufferTimer = 0;
-      Audio.prototype.jump.call(this.audio);
+      this.audio.jump();
     }
 
     // Apply gravity
@@ -226,6 +248,13 @@ export class PlatformerGame extends Game {
     // Move Y
     this.player.y += this.player.vy * deltaTime;
     this.resolveVerticalCollisions();
+
+    // Check if fell off screen
+    if (this.player.y > 144) {
+      this._gameOver = true;
+      this.audio.explosion();
+      return;
+    }
 
     // Camera follow
     this.cameraX = Math.max(0, Math.min(
@@ -251,7 +280,6 @@ export class PlatformerGame extends Game {
     const bottomTile = Math.floor((this.player.y + this.player.height - 1) / TILE_SIZE);
 
     if (this.player.vx > 0) {
-      // Moving right
       for (let ty = topTile; ty <= bottomTile; ty++) {
         const tile = this.level.getTile(rightTile, ty);
         if (tile?.solid) {
@@ -261,7 +289,6 @@ export class PlatformerGame extends Game {
         }
       }
     } else if (this.player.vx < 0) {
-      // Moving left
       for (let ty = topTile; ty <= bottomTile; ty++) {
         const tile = this.level.getTile(leftTile, ty);
         if (tile?.solid) {
@@ -282,7 +309,6 @@ export class PlatformerGame extends Game {
     this.onGround = false;
 
     if (this.player.vy > 0) {
-      // Falling down
       for (let tx = leftTile; tx <= rightTile; tx++) {
         const tile = this.level.getTile(tx, bottomTile);
         if (tile?.solid) {
@@ -293,7 +319,6 @@ export class PlatformerGame extends Game {
         }
       }
     } else if (this.player.vy < 0) {
-      // Jumping up
       for (let tx = leftTile; tx <= rightTile; tx++) {
         const tile = this.level.getTile(tx, topTile);
         if (tile?.solid) {
@@ -312,8 +337,8 @@ export class PlatformerGame extends Game {
     const tile = this.level.getTile(playerTileX, playerTileY);
     if (tile?.index === 2) {
       this.level.setTile(playerTileX, playerTileY, { index: 0, solid: false });
-      this.coins++;
-      Audio.prototype.coin.call(this.audio);
+      this._coins++;
+      this.audio.coin();
     }
   }
 
@@ -325,7 +350,7 @@ export class PlatformerGame extends Game {
     if (tile?.index === 3) {
       this.levelComplete = true;
       this.levelCompleteTimer = 2;
-      Audio.prototype.beep.call(this.audio);
+      this.audio.beep();
     }
   }
 
@@ -345,16 +370,87 @@ export class PlatformerGame extends Game {
     );
 
     // Draw HUD
-    renderer.drawText(`COINS: ${this.coins}/${this.totalCoins}`, 4, 4, 3, 8);
-    renderer.drawText(`LEVEL ${this.currentLevel + 1}`, 100, 4, 2, 8);
+    renderer.drawText(`COINS:${this._coins}/${this.totalCoins}`, 4, 4, 3);
+    renderer.drawText(`LVL${this.currentLevel + 1}`, 120, 4, 2);
 
     if (this.levelComplete) {
-      renderer.drawText('LEVEL COMPLETE!', 35, 64, 3, 12);
+      renderer.drawTextCentered('LEVEL COMPLETE!', 64, 3);
     }
 
-    if (this.gameWon) {
-      renderer.drawText('YOU WIN!', 55, 60, 3, 12);
-      renderer.drawText('PRESS START', 40, 80, 2, 8);
+    if (this._gameWon) {
+      renderer.drawTextCentered('YOU WIN!', 56, 3);
+      renderer.drawTextCentered('PRESS START', 72, 2);
+    }
+
+    if (this._gameOver) {
+      renderer.drawTextCentered('GAME OVER', 56, 3);
+      renderer.drawTextCentered('PRESS START', 72, 2);
+    }
+  }
+
+  getScore(): number {
+    return this._coins;
+  }
+
+  getHighScore(): number {
+    return this.highScore;
+  }
+
+  isGameOver(): boolean {
+    return this._gameOver || this._gameWon;
+  }
+
+  saveState(): object {
+    return {
+      player: {
+        x: this.player.x,
+        y: this.player.y,
+        vx: this.player.vx,
+        vy: this.player.vy,
+      },
+      currentLevel: this.currentLevel,
+      coins: this._coins,
+      cameraX: this.cameraX,
+      onGround: this.onGround,
+      levelTiles: this.levelTiles,
+    };
+  }
+
+  loadState(state: object): void {
+    const s = state as PlatformerSaveState;
+    this.player.x = s.player.x;
+    this.player.y = s.player.y;
+    this.player.vx = s.player.vx;
+    this.player.vy = s.player.vy;
+    this.currentLevel = s.currentLevel;
+    this._coins = s.coins;
+    this.cameraX = s.cameraX;
+    this.onGround = s.onGround;
+    this._gameOver = false;
+    this._gameWon = false;
+    this.levelComplete = false;
+
+    // Reload level with saved tiles
+    if (s.levelTiles) {
+      this.levelTiles = s.levelTiles;
+      this.level = new TileMap({
+        width: s.levelTiles[0].length,
+        height: s.levelTiles.length,
+        tileSize: TILE_SIZE,
+      });
+
+      for (let y = 0; y < s.levelTiles.length; y++) {
+        for (let x = 0; x < s.levelTiles[y].length; x++) {
+          const tileType = s.levelTiles[y][x];
+          if (tileType === 1) {
+            this.level.setTile(x, y, { index: 1, solid: true, colorIndex: 2 });
+          } else if (tileType === 2) {
+            this.level.setTile(x, y, { index: 2, solid: false, colorIndex: 3 });
+          } else if (tileType === 3) {
+            this.level.setTile(x, y, { index: 3, solid: false, colorIndex: 3 });
+          }
+        }
+      }
     }
   }
 }
