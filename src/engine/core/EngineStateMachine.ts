@@ -175,7 +175,7 @@ export class EngineStateMachine {
       this.menuScrollOffset = this.menuIndex - maxVisible + 1;
     }
 
-    if (input.isJustPressed('a')) {
+    if (input.isJustPressed('a') || input.isJustPressed('start')) {
       const selectedGame = games[this.menuIndex];
       if (selectedGame) {
         this.context.onGameSelect(selectedGame.id);
@@ -221,7 +221,11 @@ export class EngineStateMachine {
     }
 
     if (input.isJustPressed('start')) {
-      this.context.onGameRestart();
+      switch (this.gameOverIndex) {
+        case 0: this.context.onGameRestart(); break;
+        case 1: this.context.onGameResume(); break;
+        case 2: this.context.onGameMenu(); break;
+      }
     }
   }
 
@@ -294,7 +298,7 @@ export class EngineStateMachine {
     renderer.drawLine(8, SCREEN_HEIGHT - 26, SCREEN_WIDTH - 16, 3);
 
     // Controls hint
-    renderer.drawTextCentered('UP/DN:SELECT  A:GO', SCREEN_HEIGHT - 20, 2);
+    renderer.drawTextCentered('UP/DN:SELECT A/ST:GO', SCREEN_HEIGHT - 20, 2);
   }
 
   /** Draw game frame underneath the overlay */
@@ -399,6 +403,6 @@ export class EngineStateMachine {
     }
 
     // Hint
-    renderer.drawTextCentered('A:OK  ST:NEW', by + bh - 12, 2);
+    renderer.drawTextCentered('A/ST:OK  B:BACK', by + bh - 12, 2);
   }
 }
