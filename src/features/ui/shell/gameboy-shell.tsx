@@ -26,7 +26,7 @@ export function GameBoyShell({ isRunning = false, children, className }: GameBoy
         'relative flex flex-col',
         'bg-shell rounded-[24px] p-6 pb-8',
         'shadow-[0_8px_32px_rgba(126,200,227,0.3),inset_0_1px_0_rgba(255,255,255,0.3)]',
-        'w-[320px] max-w-full',
+        'w-[392px] max-w-full',
         className
       )}
     >

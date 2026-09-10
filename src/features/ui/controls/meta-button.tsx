@@ -2,9 +2,10 @@
  * @file meta-button.tsx
  * @description Single meta button (Start or Select).
  *   Small pill-shaped grey button at an angle.
+ *   Prevents double-firing on touch devices.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { GameBoyButton } from '@/lib/types';
 import { cn } from '@/lib/cn';
 
@@ -18,6 +19,8 @@ interface MetaButtonProps {
 }
 
 export function MetaButton({ label, onButtonChange, className }: MetaButtonProps) {
+  const touchActive = useRef(false);
+
   const handlePress = useCallback(() => {
     onButtonChange(label, true);
   }, [label, onButtonChange]);
@@ -25,6 +28,35 @@ export function MetaButton({ label, onButtonChange, className }: MetaButtonProps
   const handleRelease = useCallback(() => {
     onButtonChange(label, false);
   }, [label, onButtonChange]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    touchActive.current = true;
+    handlePress();
+  }, [handlePress]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    touchActive.current = false;
+    handleRelease();
+  }, [handleRelease]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (touchActive.current) return;
+    e.preventDefault();
+    handlePress();
+  }, [handlePress]);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (touchActive.current) return;
+    e.preventDefault();
+    handleRelease();
+  }, [handleRelease]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (touchActive.current) return;
+    handleRelease();
+  }, [handleRelease]);
 
   return (
     <button
@@ -37,11 +69,11 @@ export function MetaButton({ label, onButtonChange, className }: MetaButtonProps
         'rotate-[-25deg]',
         className
       )}
-      onMouseDown={handlePress}
-      onMouseUp={handleRelease}
-      onMouseLeave={handleRelease}
-      onTouchStart={handlePress}
-      onTouchEnd={handleRelease}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       aria-label={`${label} button`}
     >
       {label}

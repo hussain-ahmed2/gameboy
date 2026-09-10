@@ -6,6 +6,7 @@
 import { Game, Sprite, TileMap } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
 import { Audio, SaveState } from '@/engine/core';
+import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
 
 const GRAVITY = 400;
 const JUMP_VELOCITY = -180;
@@ -250,7 +251,7 @@ export class PlatformerGame extends Game {
     this.resolveVerticalCollisions();
 
     // Check if fell off screen
-    if (this.player.y > 144) {
+    if (this.player.y > GAME_HEIGHT) {
       this._gameOver = true;
       this.audio.explosion();
       return;
@@ -258,8 +259,8 @@ export class PlatformerGame extends Game {
 
     // Camera follow
     this.cameraX = Math.max(0, Math.min(
-      this.player.x - 80,
-      this.level.width * TILE_SIZE - 160
+      this.player.x - GAME_WIDTH / 2,
+      this.level.width * TILE_SIZE - GAME_WIDTH
     ));
 
     // Check coin collection

@@ -7,6 +7,7 @@
 import type { Renderer as RendererType } from '@/lib/types';
 import type { Input } from './Input';
 import type { GameInfo } from '../games/registry';
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from '@/lib/constants';
 
 /** Engine states */
 export enum EngineState {
@@ -225,47 +226,45 @@ export class EngineStateMachine {
   }
 
   // --- Drawing methods ---
-  // Screen: 160x144, font: 8x8, max 20 chars/line, 18 lines
+  // 8x8 font on 320x288: ~35 chars/line, 36 lines (plenty of space)
 
   private drawBoot(renderer: RendererType): void {
     renderer.clear(0);
 
     const progress = Math.min(this.bootTimer / this.bootDuration, 1);
 
-    // "GAME BOY" = 8 chars, centered
-    renderer.drawTextCentered('GAME BOY', 40, 3);
+    // Title: "GAME BOY" centered
+    renderer.drawTextCentered('GAME BOY', 50, 3);
 
     // Loading bar
-    const barW = 100;
+    const barW = 200;
     const barH = 8;
-    const barX = 30;
-    const barY = 68;
+    const barX = Math.floor((SCREEN_WIDTH - barW) / 2);
+    const barY = Math.floor(SCREEN_HEIGHT / 2) - 4;
     renderer.drawRect(barX - 1, barY - 1, barW + 2, barH + 2, 2);
     renderer.drawRect(barX, barY, barW, barH, 1);
     renderer.drawRect(barX, barY, Math.floor(barW * progress), barH, 3);
 
-    // "NINTENDO" = 8 chars, centered
+    // "NINTENDO"
     if (progress > 0.5) {
-      renderer.drawTextCentered('NINTENDO', 96, 2);
+      renderer.drawTextCentered('NINTENDO', SCREEN_HEIGHT - 36, 2);
     }
   }
 
   private drawMenu(renderer: RendererType): void {
     renderer.clear(0);
 
-    // Title: "SELECT GAME" = 11 chars, centered at y=4 (line 1)
-    renderer.drawTextCentered('SELECT GAME', 4, 3);
+    // Title: "SELECT GAME" centered
+    renderer.drawTextCentered('SELECT GAME', 6, 3);
 
-    // Separator line at y=16 (line 2)
-    renderer.drawLine(10, 16, 140, 3);
+    // Separator line
+    renderer.drawLine(8, 18, SCREEN_WIDTH - 16, 3);
 
-    // Game list: 3 items visible, each 28px tall
-    // Items start at y=22 (line 3), each item = name(8px) + desc(8px) + gap(4px) = 20px
-    // With 28px spacing: items at y=22, y=50, y=78
+    // Game list: up to 5 items visible, each 30px tall
     const games = this.context.games;
-    const startY = 22;
-    const itemH = 28;
-    const maxVisible = 3;
+    const startY = 24;
+    const itemH = 30;
+    const maxVisible = 5;
 
     for (let i = 0; i < maxVisible && i + this.menuScrollOffset < games.length; i++) {
       const idx = i + this.menuScrollOffset;
@@ -275,27 +274,27 @@ export class EngineStateMachine {
 
       if (sel) {
         // Highlight bar
-        renderer.drawRect(2, y - 2, 156, itemH - 4, 3);
+        renderer.drawRect(4, y - 2, SCREEN_WIDTH - 8, itemH - 4, 3);
       }
 
-      // Game name (max ~17 chars to fit with padding)
-      renderer.drawText(game.name, 10, y, sel ? 0 : 3);
+      // Game name (8x8 font)
+      renderer.drawText(game.name, 12, y, sel ? 0 : 3);
 
-      // Description (truncated to fit)
+      // Description (max 35 chars to fit 320px at 8px/char + 1 spacing)
       if (game.description) {
-        const maxDescChars = 17;
+        const maxDescChars = 35;
         const desc = game.description.length > maxDescChars
           ? game.description.substring(0, maxDescChars - 1) + '.'
           : game.description;
-        renderer.drawText(desc, 10, y + 10, sel ? 1 : 2);
+        renderer.drawText(desc, 12, y + 10, sel ? 1 : 2);
       }
     }
 
-    // Separator at y=110 (before last line)
-    renderer.drawLine(10, 110, 140, 3);
+    // Separator before hints
+    renderer.drawLine(8, SCREEN_HEIGHT - 26, SCREEN_WIDTH - 16, 3);
 
-    // Controls hint: "UP/DN:SELECT A:GO" = 17 chars, centered at y=116
-    renderer.drawTextCentered('UP/DN:SELECT  A:GO', 116, 2);
+    // Controls hint
+    renderer.drawTextCentered('UP/DN:SELECT  A:GO', SCREEN_HEIGHT - 20, 2);
   }
 
   /** Draw game frame underneath the overlay */
@@ -309,95 +308,97 @@ export class EngineStateMachine {
   }
 
   private drawPause(renderer: RendererType): void {
-    // Draw the game's last frame underneath
     this.drawGameFrameUnderlay(renderer);
 
     // Semi-transparent overlay (checkerboard pattern)
-    for (let y = 0; y < 144; y += 2) {
-      for (let x = 0; x < 160; x += 2) {
+    for (let y = 0; y < SCREEN_HEIGHT; y += 2) {
+      for (let x = 0; x < SCREEN_WIDTH; x += 2) {
         if ((x + y) % 4 === 0) {
           renderer.drawRect(x, y, 2, 2, 2);
         }
       }
     }
 
-    // Pause box: 120x76, centered at (20, 34)
-    const bx = 20, by = 34, bw = 120, bh = 76;
+    // Pause box: centered
+    const bw = 180, bh = 100;
+    const bx = Math.floor((SCREEN_WIDTH - bw) / 2);
+    const by = Math.floor((SCREEN_HEIGHT - bh) / 2);
     renderer.drawRect(bx, by, bw, bh, 0);
     renderer.drawRect(bx, by, bw, 1, 3);
     renderer.drawRect(bx, by + bh - 1, bw, 1, 3);
     renderer.drawRect(bx, by, 1, bh, 3);
     renderer.drawRect(bx + bw - 1, by, 1, bh, 3);
 
-    // Title: "PAUSED" = 6 chars
-    renderer.drawTextCentered('PAUSED', by + 6, 3);
+    // Title
+    renderer.drawTextCentered('PAUSED', by + 8, 3);
 
     // Separator
-    renderer.drawLine(bx + 10, by + 18, bw - 20, 3);
+    renderer.drawLine(bx + 12, by + 18, bw - 24, 3);
 
-    // Options: RESUME, RESTART, MENU
+    // Options
     const opts = ['RESUME', 'RESTART', 'MENU'];
-    const optY = by + 24;
+    const optY = by + 26;
     for (let i = 0; i < opts.length; i++) {
-      const y = optY + i * 14;
+      const y = optY + i * 18;
       const sel = i === this.pauseIndex;
-      if (sel) renderer.drawText('>', bx + 12, y, 3);
-      renderer.drawText(opts[i], bx + 26, y, sel ? 3 : 2);
+      if (sel) renderer.drawText('>', bx + 16, y, 3);
+      renderer.drawText(opts[i], bx + 28, y, sel ? 3 : 2);
     }
 
-    // Hint: "A:OK  B:BACK" = 12 chars
+    // Hint
     renderer.drawTextCentered('A:OK  B:BACK', by + bh - 12, 2);
   }
 
   private drawGameOver(renderer: RendererType): void {
-    // Draw the game's last frame underneath
     this.drawGameFrameUnderlay(renderer);
 
     // Semi-transparent overlay
-    for (let y = 0; y < 144; y += 2) {
-      for (let x = 0; x < 160; x += 2) {
+    for (let y = 0; y < SCREEN_HEIGHT; y += 2) {
+      for (let x = 0; x < SCREEN_WIDTH; x += 2) {
         if ((x + y) % 4 === 0) {
           renderer.drawRect(x, y, 2, 2, 2);
         }
       }
     }
 
-    // Game over box: 140x100, centered at (10, 22)
-    const bx = 10, by = 22, bw = 140, bh = 100;
+    // Game over box: centered
+    const bw = 240, bh = 140;
+    const bx = Math.floor((SCREEN_WIDTH - bw) / 2);
+    const by = Math.floor((SCREEN_HEIGHT - bh) / 2);
     renderer.drawRect(bx, by, bw, bh, 0);
     renderer.drawRect(bx, by, bw, 1, 3);
     renderer.drawRect(bx, by + bh - 1, bw, 1, 3);
     renderer.drawRect(bx, by, 1, bh, 3);
     renderer.drawRect(bx + bw - 1, by, 1, bh, 3);
 
-    // Title: "GAME OVER" = 9 chars
-    renderer.drawTextCentered('GAME OVER', by + 6, 3);
+    // Title
+    renderer.drawTextCentered('GAME OVER', by + 8, 3);
 
     // Score
     const info = this.context.gameOverInfo;
     if (info) {
-      renderer.drawTextCentered(`SCORE:${info.score}`, by + 22, 3);
+      renderer.drawTextCentered(`SCORE: ${info.score}`, by + 22, 3);
       if (info.isNewHighScore) {
         renderer.drawTextCentered('NEW HIGH SCORE!', by + 34, 2);
       } else {
-        renderer.drawTextCentered(`HIGH:${info.highScore}`, by + 34, 2);
+        renderer.drawTextCentered(`HIGH: ${info.highScore}`, by + 34, 2);
       }
     }
 
     // Separator
-    renderer.drawLine(bx + 10, by + 48, bw - 20, 3);
+    renderer.drawLine(bx + 12, by + 46, bw - 24, 3);
 
-    // Options: NEW GAME, CONTINUE, MENU
+    // Options
     const opts = ['NEW GAME', 'CONTINUE', 'MENU'];
     const optY = by + 54;
     for (let i = 0; i < opts.length; i++) {
-      const y = optY + i * 14;
+      const y = optY + i * 18;
       const sel = i === this.gameOverIndex;
-      if (sel) renderer.drawText('>', bx + 12, y, 3);
-      renderer.drawText(opts[i], bx + 26, y, sel ? 3 : 2);
+      if (sel) renderer.drawText('>', bx + 16, y, 3);
+      renderer.drawText(opts[i], bx + 28, y, sel ? 3 : 2);
     }
 
-    // Hint: "A:OK  ST:NEW" = 12 chars
+    // Hint
     renderer.drawTextCentered('A:OK  ST:NEW', by + bh - 12, 2);
   }
 }

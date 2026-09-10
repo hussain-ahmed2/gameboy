@@ -4,7 +4,7 @@
  */
 
 import type { Tile, Renderer, ColorIndex } from '@/lib/types';
-import { DMG_PALETTE } from '@/lib/constants';
+import { DMG_PALETTE, GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
 
 export class TileMap {
   width: number;
@@ -77,8 +77,8 @@ export class TileMap {
   draw(renderer: Renderer, cameraX: number = 0, cameraY: number = 0): void {
     const startTx = Math.max(0, Math.floor(cameraX / this.tileSize));
     const startTy = Math.max(0, Math.floor(cameraY / this.tileSize));
-    const endTx = Math.min(this.width - 1, Math.floor((cameraX + 160) / this.tileSize));
-    const endTy = Math.min(this.height - 1, Math.floor((cameraY + 144) / this.tileSize));
+    const endTx = Math.min(this.width - 1, Math.floor((cameraX + GAME_WIDTH) / this.tileSize));
+    const endTy = Math.min(this.height - 1, Math.floor((cameraY + GAME_HEIGHT) / this.tileSize));
 
     for (let ty = startTy; ty <= endTy; ty++) {
       for (let tx = startTx; tx <= endTx; tx++) {

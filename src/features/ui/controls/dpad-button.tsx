@@ -2,9 +2,10 @@
  * @file dpad-button.tsx
  * @description Single directional button for the D-pad.
  *   Handles mouse and touch events, dispatching press/release callbacks.
+ *   Prevents double-firing on touch devices.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { GameBoyButton } from '@/lib/types';
 import { cn } from '@/lib/cn';
 
@@ -18,6 +19,8 @@ interface DPadButtonProps {
 }
 
 export function DPadButton({ direction, onButtonChange, className }: DPadButtonProps) {
+  const touchActive = useRef(false);
+
   const handlePress = useCallback(() => {
     onButtonChange(direction, true);
   }, [direction, onButtonChange]);
@@ -25,6 +28,35 @@ export function DPadButton({ direction, onButtonChange, className }: DPadButtonP
   const handleRelease = useCallback(() => {
     onButtonChange(direction, false);
   }, [direction, onButtonChange]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    touchActive.current = true;
+    handlePress();
+  }, [handlePress]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    touchActive.current = false;
+    handleRelease();
+  }, [handleRelease]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (touchActive.current) return;
+    e.preventDefault();
+    handlePress();
+  }, [handlePress]);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (touchActive.current) return;
+    e.preventDefault();
+    handleRelease();
+  }, [handleRelease]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (touchActive.current) return;
+    handleRelease();
+  }, [handleRelease]);
 
   return (
     <button
@@ -36,11 +68,11 @@ export function DPadButton({ direction, onButtonChange, className }: DPadButtonP
         'flex items-center justify-center',
         className
       )}
-      onMouseDown={handlePress}
-      onMouseUp={handleRelease}
-      onMouseLeave={handleRelease}
-      onTouchStart={handlePress}
-      onTouchEnd={handleRelease}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       aria-label={direction}
     >
       <span className="sr-only">{direction}</span>

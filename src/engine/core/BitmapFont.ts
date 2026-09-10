@@ -5,6 +5,8 @@
  *   one row of pixels (MSB = leftmost pixel).
  */
 
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from '@/lib/constants';
+
 /** Font character data - 8 bytes per character (8x8 pixels) */
 const FONT_DATA: Record<string, number[]> = {
   'A': [0x3C, 0x66, 0x66, 0x7E, 0x66, 0x66, 0x66, 0x00],
@@ -102,6 +104,73 @@ export const CHAR_HEIGHT = 8;
 /** Spacing between characters in pixels */
 export const CHAR_SPACING = 1;
 
+/** Small font character width in pixels */
+export const SMALL_CHAR_WIDTH = 4;
+
+/** Small font character height in pixels */
+export const SMALL_CHAR_HEIGHT = 4;
+
+/** Small font spacing between characters in pixels */
+export const SMALL_CHAR_SPACING = 1;
+
+/**
+ * Generate a 4x4 small font from the 8x8 data by sampling every other pixel.
+ */
+function buildSmallFont(): Record<string, number[]> {
+  const small: Record<string, number[]> = {};
+  for (const [ch, data] of Object.entries(FONT_DATA)) {
+    const rows: number[] = [];
+    for (let r = 0; r < 4; r++) {
+      const byte8 = data[r * 2];
+      // Take bits 7,5,3,1 from the 8x8 row → 4 pixels in a 4-bit nibble
+      const b7 = (byte8 >> 7) & 1;
+      const b5 = (byte8 >> 5) & 1;
+      const b3 = (byte8 >> 3) & 1;
+      const b1 = (byte8 >> 1) & 1;
+      rows.push((b7 << 3) | (b5 << 2) | (b3 << 1) | b1);
+    }
+    small[ch] = rows;
+  }
+  return small;
+}
+
+const SMALL_FONT_DATA = buildSmallFont();
+
+/** Medium font character width in pixels */
+export const MED_CHAR_WIDTH = 6;
+
+/** Medium font character height in pixels */
+export const MED_CHAR_HEIGHT = 6;
+
+/** Medium font spacing between characters in pixels */
+export const MED_CHAR_SPACING = 1;
+
+/**
+ * Generate a 6x6 medium font from the 8x8 data.
+ * Takes first 6 rows, middle 6 columns (bits 6..1).
+ */
+function buildMediumFont(): Record<string, number[]> {
+  const med: Record<string, number[]> = {};
+  for (const [ch, data] of Object.entries(FONT_DATA)) {
+    const rows: number[] = [];
+    for (let r = 0; r < 6; r++) {
+      const byte8 = data[r];
+      // Extract bits 6,5,4,3,2,1 → 6 pixels stored in bits 5..0
+      const b6 = (byte8 >> 6) & 1;
+      const b5 = (byte8 >> 5) & 1;
+      const b4 = (byte8 >> 4) & 1;
+      const b3 = (byte8 >> 3) & 1;
+      const b2 = (byte8 >> 2) & 1;
+      const b1 = (byte8 >> 1) & 1;
+      rows.push((b6 << 5) | (b5 << 4) | (b4 << 3) | (b3 << 2) | (b2 << 1) | b1);
+    }
+    med[ch] = rows;
+  }
+  return med;
+}
+
+const MED_FONT_DATA = buildMediumFont();
+
 /**
  * Get the pixel data for a character.
  * @param char - Character to get data for
@@ -140,8 +209,8 @@ export function drawChar(
   const data = getCharData(char);
   if (!data) return false;
 
-  const screenW = 160;
-  const screenH = 144;
+  const screenW = SCREEN_WIDTH;
+  const screenH = SCREEN_HEIGHT;
 
   for (let row = 0; row < CHAR_HEIGHT; row++) {
     const byte = data[row];
@@ -197,7 +266,7 @@ export function drawTextCentered(
   text: string,
   y: number,
   colorIndex: number = 3,
-  maxWidth: number = 160
+  maxWidth: number = SCREEN_WIDTH
 ): void {
   const textWidth = measureText(text);
   const x = Math.floor((maxWidth - textWidth) / 2);
@@ -215,8 +284,8 @@ export function drawRect(
   h: number,
   colorIndex: number
 ): void {
-  const screenW = 160;
-  const screenH = 144;
+  const screenW = SCREEN_WIDTH;
+  const screenH = SCREEN_HEIGHT;
   const startX = Math.max(0, Math.floor(x));
   const startY = Math.max(0, Math.floor(y));
   const endX = Math.min(screenW, startX + Math.ceil(w));
@@ -240,7 +309,6 @@ export function drawHighlight(
   w: number,
   h: number,
   bgColor: number = 3,
-  fgColor: number = 0
 ): void {
   drawRect(framebuffer, x, y, w, h, bgColor);
 }
@@ -256,4 +324,148 @@ export function drawLine(
   colorIndex: number
 ): void {
   drawRect(framebuffer, x, y, length, 1, colorIndex);
+}
+
+/**
+ * Draw a single small (4x4) character to a framebuffer.
+ */
+export function drawCharSmall(
+  framebuffer: Uint8Array,
+  char: string,
+  x: number,
+  y: number,
+  colorIndex: number = 3
+): boolean {
+  const upper = char.toUpperCase();
+  const data = SMALL_FONT_DATA[upper] ?? SMALL_FONT_DATA[char] ?? null;
+  if (!data) return false;
+
+  const screenW = SCREEN_WIDTH;
+  const screenH = SCREEN_HEIGHT;
+
+  for (let row = 0; row < SMALL_CHAR_HEIGHT; row++) {
+    const byte = data[row];
+    for (let col = 0; col < SMALL_CHAR_WIDTH; col++) {
+      if (byte & (0x08 >> col)) {
+        const px = x + col;
+        const py = y + row;
+        if (px >= 0 && px < screenW && py >= 0 && py < screenH) {
+          framebuffer[py * screenW + px] = colorIndex;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+/**
+ * Measure the width of a small text string in pixels.
+ */
+export function measureTextSmall(text: string): number {
+  return text.length * (SMALL_CHAR_WIDTH + SMALL_CHAR_SPACING) - SMALL_CHAR_SPACING;
+}
+
+/**
+ * Draw a string of small (4x4) text to a framebuffer.
+ */
+export function drawTextSmall(
+  framebuffer: Uint8Array,
+  text: string,
+  x: number,
+  y: number,
+  colorIndex: number = 3
+): number {
+  let cursorX = x;
+  for (const char of text) {
+    drawCharSmall(framebuffer, char, cursorX, y, colorIndex);
+    cursorX += SMALL_CHAR_WIDTH + SMALL_CHAR_SPACING;
+  }
+  return cursorX - x;
+}
+
+/**
+ * Draw centered small (4x4) text on a framebuffer.
+ */
+export function drawTextCenteredSmall(
+  framebuffer: Uint8Array,
+  text: string,
+  y: number,
+  colorIndex: number = 3,
+  maxWidth: number = SCREEN_WIDTH
+): void {
+  const textWidth = measureTextSmall(text);
+  const x = Math.floor((maxWidth - textWidth) / 2);
+  drawTextSmall(framebuffer, text, x, y, colorIndex);
+}
+
+/**
+ * Draw a single medium (6x6) character to a framebuffer.
+ */
+export function drawCharMedium(
+  framebuffer: Uint8Array,
+  char: string,
+  x: number,
+  y: number,
+  colorIndex: number = 3
+): boolean {
+  const upper = char.toUpperCase();
+  const data = MED_FONT_DATA[upper] ?? MED_FONT_DATA[char] ?? null;
+  if (!data) return false;
+
+  const screenW = SCREEN_WIDTH;
+  const screenH = SCREEN_HEIGHT;
+
+  for (let row = 0; row < MED_CHAR_HEIGHT; row++) {
+    const byte = data[row];
+    for (let col = 0; col < MED_CHAR_WIDTH; col++) {
+      if (byte & (0x20 >> col)) {
+        const px = x + col;
+        const py = y + row;
+        if (px >= 0 && px < screenW && py >= 0 && py < screenH) {
+          framebuffer[py * screenW + px] = colorIndex;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+/**
+ * Measure the width of a medium text string in pixels.
+ */
+export function measureTextMedium(text: string): number {
+  return text.length * (MED_CHAR_WIDTH + MED_CHAR_SPACING) - MED_CHAR_SPACING;
+}
+
+/**
+ * Draw a string of medium (6x6) text to a framebuffer.
+ */
+export function drawTextMedium(
+  framebuffer: Uint8Array,
+  text: string,
+  x: number,
+  y: number,
+  colorIndex: number = 3
+): number {
+  let cursorX = x;
+  for (const char of text) {
+    drawCharMedium(framebuffer, char, cursorX, y, colorIndex);
+    cursorX += MED_CHAR_WIDTH + MED_CHAR_SPACING;
+  }
+  return cursorX - x;
+}
+
+/**
+ * Draw centered medium (6x6) text on a framebuffer.
+ */
+export function drawTextCenteredMedium(
+  framebuffer: Uint8Array,
+  text: string,
+  y: number,
+  colorIndex: number = 3,
+  maxWidth: number = SCREEN_WIDTH
+): void {
+  const textWidth = measureTextMedium(text);
+  const x = Math.floor((maxWidth - textWidth) / 2);
+  drawTextMedium(framebuffer, text, x, y, colorIndex);
 }

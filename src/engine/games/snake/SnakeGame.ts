@@ -6,10 +6,11 @@
 import { Game, Sprite } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
 import { Audio, SaveState } from '@/engine/core';
+import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
 
 const GRID_SIZE = 8;
-const GRID_WIDTH = 160 / GRID_SIZE;  // 20
-const GRID_HEIGHT = 144 / GRID_SIZE; // 18
+const GRID_WIDTH = GAME_WIDTH / GRID_SIZE;
+const GRID_HEIGHT = GAME_HEIGHT / GRID_SIZE;
 const BASE_SPEED = 150; // ms per move
 const SPEED_INCREASE = 0.95; // 5% faster per food
 const MIN_SPEED = 50;

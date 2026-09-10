@@ -45,8 +45,8 @@ test.describe('In-Screen Menu', () => {
       const ctx = canvas.getContext('2d');
       if (!ctx) return false;
       const lightestGreen = { r: 155, g: 188, b: 15 };
-      for (let x = 0; x < 160; x += 10) {
-        for (let y = 0; y < 144; y += 10) {
+      for (let x = 0; x < 320; x += 10) {
+        for (let y = 0; y < 288; y += 10) {
           const pixel = ctx.getImageData(x, y, 1, 1).data;
           const isBg =
             Math.abs(pixel[0] - lightestGreen.r) < 10 &&

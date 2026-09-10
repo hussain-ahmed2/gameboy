@@ -74,8 +74,14 @@ export interface Renderer {
   drawRect(x: number, y: number, w: number, h: number, colorIndex: ColorIndex): void;
   drawText(text: string, x: number, y: number, colorIndex?: ColorIndex): void;
   drawTextCentered(text: string, y: number, colorIndex?: ColorIndex): void;
-  drawLine(x: number, y: number, length: number, colorIndex: ColorIndex): void;
+  drawTextSmall(text: string, x: number, y: number, colorIndex?: ColorIndex): void;
+  drawTextCenteredSmall(text: string, y: number, colorIndex?: ColorIndex): void;
+  drawTextMedium(text: string, x: number, y: number, colorIndex?: ColorIndex): void;
+  drawTextCenteredMedium(text: string, y: number, colorIndex?: ColorIndex): void;
   measureText(text: string): number;
+  measureTextSmall(text: string): number;
+  measureTextMedium(text: string): number;
+  drawLine(x: number, y: number, length: number, colorIndex: ColorIndex): void;
   getFramebuffer(): Uint8Array;
 }
 

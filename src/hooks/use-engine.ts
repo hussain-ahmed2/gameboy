@@ -11,6 +11,7 @@ import { createGame, getAllGames, type GameInfo } from '@/engine/games';
 import { Game } from '@/engine/api/Game';
 import type { GamePadState } from '@/lib/types';
 import type { GameOverInfo } from '@/engine/core/EngineStateMachine';
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from '@/lib/constants';
 
 interface UseEngineReturn {
   currentGameId: string;
@@ -60,8 +61,8 @@ export function useEngine(): UseEngineReturn {
 
   useEffect(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 160;
-    canvas.height = 144;
+    canvas.width = SCREEN_WIDTH;
+    canvas.height = SCREEN_HEIGHT;
     canvasRef.current = canvas;
 
     const rendererInstance = new Renderer(canvas);
@@ -131,6 +132,7 @@ export function useEngine(): UseEngineReturn {
 
         const state = sm.getState();
         if (state === EngineState.PLAYING) {
+          rendererInstance.setGameScale(2);
           const game = gameRef.current;
           if (game) {
             game.update(input.getState(), deltaTime);
@@ -142,6 +144,8 @@ export function useEngine(): UseEngineReturn {
               sm.transition(EngineState.GAME_OVER);
             }
           }
+        } else {
+          rendererInstance.setGameScale(1);
         }
 
         input.update();
@@ -155,15 +159,17 @@ export function useEngine(): UseEngineReturn {
         const state = sm.getState();
 
         if (state === EngineState.PLAYING) {
+          renderer.setGameScale(2);
           const game = gameRef.current;
           if (game) {
             renderer.clear(0);
             game.draw(renderer);
           }
         } else if (state === EngineState.PAUSED || state === EngineState.GAME_OVER) {
-          // Draw game frame first, then overlay on top
+          renderer.setGameScale(1);
           sm.draw(_interpolation);
         } else {
+          renderer.setGameScale(1);
           sm.draw(_interpolation);
         }
 
@@ -245,7 +251,11 @@ export function useEngine(): UseEngineReturn {
 
   const handleButtonChange = useCallback(
     (button: string, pressed: boolean) => {
-      const key = button as keyof GamePadState;
+      const buttonToKey: Record<string, keyof GamePadState> = {
+        Up: 'up', Down: 'down', Left: 'left', Right: 'right',
+        A: 'a', B: 'b', Start: 'start', Select: 'select',
+      };
+      const key = buttonToKey[button] ?? button as keyof GamePadState;
       gamepadRef.current = { ...gamepadRef.current, [key]: pressed };
       inputRef.current?.setButton(key, pressed);
     },

@@ -23,12 +23,13 @@ function GameBoyContent() {
     handleButtonChange,
     pause,
     resume,
+    goToMenu,
   } = useEngineContext();
 
   // Keyboard shortcuts for meta buttons
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape = Pause/Resume
+      // Escape = Pause/Resume toggle
       if (e.key === 'Escape') {
         if (engineState === EngineState.PLAYING) {
           pause();

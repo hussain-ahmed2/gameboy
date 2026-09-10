@@ -6,6 +6,7 @@
 import { Game, Sprite } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
 import { SaveState } from '@/engine/core';
+import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
 
 const PADDLE_WIDTH = 4;
 const PADDLE_HEIGHT = 24;
@@ -51,15 +52,15 @@ export class PongGame extends Game {
     // Create player paddle (left)
     this.playerPaddle = new Sprite({
       x: 8,
-      y: (144 - PADDLE_HEIGHT) / 2,
+      y: (GAME_HEIGHT - PADDLE_HEIGHT) / 2,
       frames: [{ x: 0, y: 0, w: PADDLE_WIDTH, h: PADDLE_HEIGHT, duration: 1000 }],
     });
     this.playerPaddle.colorIndex = 3;
 
     // Create AI paddle (right)
     this.aiPaddle = new Sprite({
-      x: 160 - 8 - PADDLE_WIDTH,
-      y: (144 - PADDLE_HEIGHT) / 2,
+      x: GAME_WIDTH - 8 - PADDLE_WIDTH,
+      y: (GAME_HEIGHT - PADDLE_HEIGHT) / 2,
       frames: [{ x: 0, y: 0, w: PADDLE_WIDTH, h: PADDLE_HEIGHT, duration: 1000 }],
     });
     this.aiPaddle.colorIndex = 3;
@@ -89,7 +90,7 @@ export class PongGame extends Game {
     if (input.up && this.playerPaddle.y > 0) {
       this.playerPaddle.y -= PADDLE_SPEED * deltaTime;
     }
-    if (input.down && this.playerPaddle.y < 144 - PADDLE_HEIGHT) {
+    if (input.down && this.playerPaddle.y < GAME_HEIGHT - PADDLE_HEIGHT) {
       this.playerPaddle.y += PADDLE_SPEED * deltaTime;
     }
 
@@ -100,7 +101,7 @@ export class PongGame extends Game {
     
     if (Math.abs(aiDiff) > 4) {
       const aiSpeed = PADDLE_SPEED * 0.7;
-      if (aiDiff > 0 && this.aiPaddle.y < 144 - PADDLE_HEIGHT) {
+      if (aiDiff > 0 && this.aiPaddle.y < GAME_HEIGHT - PADDLE_HEIGHT) {
         this.aiPaddle.y += Math.min(aiSpeed * deltaTime, aiDiff);
       } else if (aiDiff < 0 && this.aiPaddle.y > 0) {
         this.aiPaddle.y += Math.max(-aiSpeed * deltaTime, aiDiff);
@@ -116,8 +117,8 @@ export class PongGame extends Game {
       this.ball.y = 0;
       this.ball.vy = Math.abs(this.ball.vy);
       this.audio.beep();
-    } else if (this.ball.y >= 144 - BALL_SIZE) {
-      this.ball.y = 144 - BALL_SIZE;
+    } else if (this.ball.y >= GAME_HEIGHT - BALL_SIZE) {
+      this.ball.y = GAME_HEIGHT - BALL_SIZE;
       this.ball.vy = -Math.abs(this.ball.vy);
       this.audio.beep();
     }
@@ -152,7 +153,7 @@ export class PongGame extends Game {
       this.checkWin();
       if (!this._gameOver) this.resetBall();
       this.audio.boop();
-    } else if (this.ball.x > 160) {
+    } else if (this.ball.x > GAME_WIDTH) {
       this.playerScore++;
       this.checkWin();
       if (!this._gameOver) this.resetBall();
@@ -171,7 +172,7 @@ export class PongGame extends Game {
     renderer.clear(0);
 
     // Draw center line
-    for (let y = 0; y < 144; y += 8) {
+    for (let y = 0; y < GAME_HEIGHT; y += 8) {
       renderer.drawRect(79, y, 2, 4, 2);
     }
 

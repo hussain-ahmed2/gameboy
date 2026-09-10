@@ -20,8 +20,8 @@ async function canvasHasContent(page: import('@playwright/test').Page): Promise<
     const ctx = canvas.getContext('2d');
     if (!ctx) return false;
     const lightestGreen = { r: 155, g: 188, b: 15 };
-    for (let x = 0; x < 160; x += 10) {
-      for (let y = 0; y < 144; y += 10) {
+    for (let x = 0; x < canvas.width; x += 10) {
+      for (let y = 0; y < canvas.height; y += 10) {
         const pixel = ctx.getImageData(x, y, 1, 1).data;
         const isBg =
           Math.abs(pixel[0] - lightestGreen.r) < 10 &&
@@ -92,13 +92,15 @@ test.describe('Pong Gameplay', () => {
 
   test('should render player paddle on left side', async ({ page }) => {
     await waitForFrames(page, 10);
-    const leftPixels = await countNonBackgroundPixels(page, 4, 40, 12, 60);
+    // Game coord x=8 → canvas x=16 (2x scale), paddle 4px wide → 8px on canvas
+    const leftPixels = await countNonBackgroundPixels(page, 8, 80, 24, 120);
     expect(leftPixels).toBeGreaterThan(0);
   });
 
   test('should render AI paddle on right side', async ({ page }) => {
     await waitForFrames(page, 10);
-    const rightPixels = await countNonBackgroundPixels(page, 144, 40, 12, 60);
+    // Game coord x=148 → canvas x=296 (2x scale)
+    const rightPixels = await countNonBackgroundPixels(page, 280, 80, 24, 120);
     expect(rightPixels).toBeGreaterThan(0);
   });
 
@@ -136,13 +138,15 @@ test.describe('Pong Gameplay', () => {
 
   test('should show score on screen', async ({ page }) => {
     await waitForFrames(page, 10);
-    const scorePixels = await countNonBackgroundPixels(page, 55, 0, 50, 16);
+    // Game coord x=60 → canvas x=120 (2x scale)
+    const scorePixels = await countNonBackgroundPixels(page, 110, 0, 100, 32);
     expect(scorePixels).toBeGreaterThan(0);
   });
 
   test('should render center dashed line', async ({ page }) => {
     await waitForFrames(page, 10);
-    const centerPixels = await countNonBackgroundPixels(page, 78, 0, 4, 144);
+    // Game coord x=79 → canvas x=158 (2x scale), width=2 → 4px on canvas
+    const centerPixels = await countNonBackgroundPixels(page, 152, 0, 16, 288);
     expect(centerPixels).toBeGreaterThan(0);
   });
 
@@ -186,13 +190,13 @@ test.describe('Snake Gameplay', () => {
 
   test('should render snake on screen', async ({ page }) => {
     await waitForFrames(page, 10);
-    const snakePixels = await countNonBackgroundPixels(page, 0, 0, 160, 144);
+    const snakePixels = await countNonBackgroundPixels(page, 0, 0, 320, 288);
     expect(snakePixels).toBeGreaterThan(0);
   });
 
   test('should render food somewhere on screen', async ({ page }) => {
     await waitForFrames(page, 10);
-    const totalPixels = await countNonBackgroundPixels(page, 0, 0, 160, 144);
+    const totalPixels = await countNonBackgroundPixels(page, 0, 0, 320, 288);
     expect(totalPixels).toBeGreaterThan(10);
   });
 
@@ -216,7 +220,7 @@ test.describe('Snake Gameplay', () => {
 
   test('should display score', async ({ page }) => {
     await waitForFrames(page, 10);
-    const scorePixels = await countNonBackgroundPixels(page, 0, 0, 160, 16);
+    const scorePixels = await countNonBackgroundPixels(page, 0, 0, 320, 32);
     expect(scorePixels).toBeGreaterThan(0);
   });
 
@@ -249,13 +253,13 @@ test.describe('Platformer Gameplay', () => {
 
   test('should render ground tiles at bottom', async ({ page }) => {
     await waitForFrames(page, 10);
-    const groundPixels = await countNonBackgroundPixels(page, 0, 100, 160, 44);
+    const groundPixels = await countNonBackgroundPixels(page, 0, 200, 320, 88);
     expect(groundPixels).toBeGreaterThan(0);
   });
 
   test('should render player character', async ({ page }) => {
     await waitForFrames(page, 10);
-    const playerPixels = await countNonBackgroundPixels(page, 0, 0, 160, 144);
+    const playerPixels = await countNonBackgroundPixels(page, 0, 0, 320, 288);
     expect(playerPixels).toBeGreaterThan(0);
   });
 
@@ -298,7 +302,7 @@ test.describe('Platformer Gameplay', () => {
 
   test('should display HUD with coins and level', async ({ page }) => {
     await waitForFrames(page, 10);
-    const hudPixels = await countNonBackgroundPixels(page, 0, 0, 160, 16);
+    const hudPixels = await countNonBackgroundPixels(page, 0, 0, 320, 32);
     expect(hudPixels).toBeGreaterThan(0);
   });
 

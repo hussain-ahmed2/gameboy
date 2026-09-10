@@ -3,9 +3,17 @@
  * @description Game engine constants: screen dimensions, color palette, key mapping.
  */
 
-/** Screen dimensions in pixels (GameBoy DMG resolution) */
-export const SCREEN_WIDTH = 160;
-export const SCREEN_HEIGHT = 144;
+/** Screen dimensions in pixels (2x GameBoy DMG resolution) */
+export const SCREEN_WIDTH = 320;
+export const SCREEN_HEIGHT = 288;
+
+/** Original GameBoy resolution for game coordinate systems */
+export const GAME_WIDTH = 160;
+export const GAME_HEIGHT = 144;
+
+/** UI font size: 8 = 8x8 font, 6 = 6x6 font, 4 = 4x4 font */
+export const UI_FONT_SIZE = 8;
+export const UI_FONT_SPACING = 1;
 
 /** Target frame rate */
 export const TARGET_FPS = 60;
