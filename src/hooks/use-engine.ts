@@ -185,6 +185,9 @@ export function useEngine(): UseEngineReturn {
           if (game) {
             renderer.clear(0);
             game.draw(renderer);
+
+            // Credit overlay
+            renderer.drawTextCentered('MADE BY HUSSAIN AHMED', SCREEN_HEIGHT - 12, 2);
           }
         } else if (state === EngineState.PAUSED || state === EngineState.GAME_OVER) {
           renderer.setGameScale(1);
