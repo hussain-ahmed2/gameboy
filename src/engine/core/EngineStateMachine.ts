@@ -199,8 +199,16 @@ export class EngineStateMachine {
       }
     }
 
-    if (input.isJustPressed('b') || input.isJustPressed('start')) {
+    if (input.isJustPressed('b')) {
       this.context.onGameResume();
+    }
+
+    if (input.isJustPressed('start')) {
+      switch (this.pauseIndex) {
+        case 0: this.context.onGameResume(); break;
+        case 1: this.context.onGameRestart(); break;
+        case 2: this.context.onGameMenu(); break;
+      }
     }
   }
 
@@ -350,7 +358,7 @@ export class EngineStateMachine {
     }
 
     // Hint
-    renderer.drawTextCentered('A:OK  B:BACK', by + bh - 12, 2);
+    renderer.drawTextCentered('A/ST:OK  B:BACK', by + bh - 12, 2);
   }
 
   private drawGameOver(renderer: RendererType): void {
