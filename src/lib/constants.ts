@@ -11,6 +11,9 @@ export const SCREEN_HEIGHT = 288;
 export const GAME_WIDTH = 160;
 export const GAME_HEIGHT = 144;
 
+/** HUD height in game pixels - non-playable zone at top for scores */
+export const HUD_HEIGHT = 24;
+
 /** UI font size: 8 = 8x8 font, 6 = 6x6 font, 4 = 4x4 font */
 export const UI_FONT_SIZE = 8;
 export const UI_FONT_SPACING = 1;

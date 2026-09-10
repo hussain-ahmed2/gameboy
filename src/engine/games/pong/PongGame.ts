@@ -6,7 +6,7 @@
 import { Game, Sprite } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
 import { SaveState } from '@/engine/core';
-import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
+import { GAME_WIDTH, GAME_HEIGHT, HUD_HEIGHT } from '@/lib/constants';
 
 const PADDLE_WIDTH = 4;
 const PADDLE_HEIGHT = 24;
@@ -182,6 +182,9 @@ export class PongGame extends Game {
       this.aiPaddle.draw(renderer);
       this.ball.draw(renderer);
     }
+
+    // HUD separator
+    renderer.drawRect(0, HUD_HEIGHT, GAME_WIDTH, 1, 2);
 
     // Draw scores
     renderer.drawText(`${this.playerScore}`, 60, 4, 3);

@@ -8,11 +8,13 @@ import type { Renderer as RendererType } from '@/lib/types';
 import type { Input } from './Input';
 import type { GameInfo } from '../games/registry';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from '@/lib/constants';
+import { SaveState } from './SaveState';
 
 /** Engine states */
 export enum EngineState {
   BOOT = 'BOOT',
   MENU = 'MENU',
+  GAME_SELECT = 'GAME_SELECT',
   PLAYING = 'PLAYING',
   PAUSED = 'PAUSED',
   GAME_OVER = 'GAME_OVER',
@@ -37,6 +39,7 @@ export interface StateContext {
   gameOverInfo: GameOverInfo | null;
   onStateChange: StateChangeCallback;
   onGameSelect: (gameId: string) => void;
+  onGameContinue: (gameId: string) => void;
   onGameResume: () => void;
   onGameRestart: () => void;
   onGameMenu: () => void;
@@ -49,6 +52,8 @@ export class EngineStateMachine {
   private state: EngineState = EngineState.BOOT;
   private context: StateContext;
   private menuIndex: number = 0;
+  private gameSelectIndex: number = 0;
+  private selectedGameId: string = '';
   private pauseIndex: number = 0;
   private gameOverIndex: number = 0;
   private bootTimer: number = 0;
@@ -96,6 +101,9 @@ export class EngineStateMachine {
       case EngineState.MENU:
         this.updateMenu(input);
         break;
+      case EngineState.GAME_SELECT:
+        this.updateGameSelect(input);
+        break;
       case EngineState.PLAYING:
         break;
       case EngineState.PAUSED:
@@ -116,6 +124,9 @@ export class EngineStateMachine {
       case EngineState.MENU:
         this.drawMenu(renderer);
         break;
+      case EngineState.GAME_SELECT:
+        this.drawGameSelect(renderer);
+        break;
       case EngineState.PLAYING:
         break;
       case EngineState.PAUSED:
@@ -135,6 +146,9 @@ export class EngineStateMachine {
       case EngineState.MENU:
         this.menuIndex = 0;
         this.menuScrollOffset = 0;
+        break;
+      case EngineState.GAME_SELECT:
+        this.gameSelectIndex = 0;
         break;
       case EngineState.PAUSED:
         this.pauseIndex = 0;
@@ -178,8 +192,37 @@ export class EngineStateMachine {
     if (input.isJustPressed('a') || input.isJustPressed('start')) {
       const selectedGame = games[this.menuIndex];
       if (selectedGame) {
-        this.context.onGameSelect(selectedGame.id);
+        const hasSave = SaveState.load(selectedGame.id) !== null;
+        if (hasSave) {
+          this.selectedGameId = selectedGame.id;
+          this.transition(EngineState.GAME_SELECT);
+        } else {
+          this.context.onGameSelect(selectedGame.id);
+        }
       }
+    }
+  }
+
+  private updateGameSelect(input: Input): void {
+    const opts = ['CONTINUE', 'NEW GAME', 'BACK'];
+
+    if (input.isJustPressed('up')) {
+      this.gameSelectIndex = (this.gameSelectIndex + 2) % 3;
+    }
+    if (input.isJustPressed('down')) {
+      this.gameSelectIndex = (this.gameSelectIndex + 1) % 3;
+    }
+
+    if (input.isJustPressed('a') || input.isJustPressed('start')) {
+      switch (this.gameSelectIndex) {
+        case 0: this.context.onGameContinue(this.selectedGameId); break;
+        case 1: this.context.onGameSelect(this.selectedGameId); break;
+        case 2: this.transition(EngineState.MENU); break;
+      }
+    }
+
+    if (input.isJustPressed('b')) {
+      this.transition(EngineState.MENU);
     }
   }
 
@@ -257,9 +300,9 @@ export class EngineStateMachine {
     renderer.drawRect(barX, barY, barW, barH, 1);
     renderer.drawRect(barX, barY, Math.floor(barW * progress), barH, 3);
 
-    // "NINTENDO"
+    // Made by credit
     if (progress > 0.5) {
-      renderer.drawTextCentered('NINTENDO', SCREEN_HEIGHT - 36, 2);
+      renderer.drawTextCentered('MADE BY HUSSAIN AHMED', SCREEN_HEIGHT - 36, 2);
     }
   }
 
@@ -272,11 +315,11 @@ export class EngineStateMachine {
     // Separator line
     renderer.drawLine(8, 18, SCREEN_WIDTH - 16, 3);
 
-    // Game list: up to 5 items visible, each 30px tall
+    // Game list: up to 6 items visible, each 30px tall
     const games = this.context.games;
     const startY = 24;
     const itemH = 30;
-    const maxVisible = 5;
+    const maxVisible = 6;
 
     for (let i = 0; i < maxVisible && i + this.menuScrollOffset < games.length; i++) {
       const idx = i + this.menuScrollOffset;
@@ -307,6 +350,49 @@ export class EngineStateMachine {
 
     // Controls hint
     renderer.drawTextCentered('UP/DN:SELECT A/ST:GO', SCREEN_HEIGHT - 20, 2);
+  }
+
+  private drawGameSelect(renderer: RendererType): void {
+    renderer.clear(0);
+
+    // Find game name
+    const game = this.context.games.find(g => g.id === this.selectedGameId);
+    const gameName = game?.name ?? 'GAME';
+
+    // Title
+    renderer.drawTextCentered(gameName, 6, 3);
+
+    // Separator
+    renderer.drawLine(8, 18, SCREEN_WIDTH - 16, 3);
+
+    // Prompt box
+    const bw = 200, bh = 100;
+    const bx = Math.floor((SCREEN_WIDTH - bw) / 2);
+    const by = Math.floor((SCREEN_HEIGHT - bh) / 2);
+    renderer.drawRect(bx, by, bw, bh, 0);
+    renderer.drawRect(bx, by, bw, 1, 3);
+    renderer.drawRect(bx, by + bh - 1, bw, 1, 3);
+    renderer.drawRect(bx, by, 1, bh, 3);
+    renderer.drawRect(bx + bw - 1, by, 1, bh, 3);
+
+    // "SAVE DATA FOUND" text
+    renderer.drawTextCentered('SAVE DATA FOUND', by + 8, 2);
+
+    // Separator
+    renderer.drawLine(bx + 12, by + 20, bw - 24, 3);
+
+    // Options
+    const opts = ['CONTINUE', 'NEW GAME', 'BACK'];
+    const optY = by + 30;
+    for (let i = 0; i < opts.length; i++) {
+      const y = optY + i * 18;
+      const sel = i === this.gameSelectIndex;
+      if (sel) renderer.drawText('>', bx + 16, y, 3);
+      renderer.drawText(opts[i], bx + 28, y, sel ? 3 : 2);
+    }
+
+    // Hint
+    renderer.drawTextCentered('A/ST:OK  B:BACK', by + bh - 12, 2);
   }
 
   /** Draw game frame underneath the overlay */

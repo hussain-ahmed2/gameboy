@@ -6,13 +6,15 @@
 import { Game, Sprite } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
 import { Audio, SaveState } from '@/engine/core';
-import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
+import { GAME_WIDTH, GAME_HEIGHT, HUD_HEIGHT } from '@/lib/constants';
 
 const GRID_SIZE = 8;
 const GRID_WIDTH = GAME_WIDTH / GRID_SIZE;
 const GRID_HEIGHT = GAME_HEIGHT / GRID_SIZE;
-const BASE_SPEED = 150; // ms per move
-const SPEED_INCREASE = 0.95; // 5% faster per food
+const HUD_GRID_Y = Math.ceil(HUD_HEIGHT / GRID_SIZE); // 2 rows for HUD
+const PLAY_TOP = HUD_GRID_Y; // first playable row
+const BASE_SPEED = 150;
+const SPEED_INCREASE = 0.95;
 const MIN_SPEED = 50;
 
 const HIGHSCORE_KEY = 'snake_highscore';
@@ -48,17 +50,15 @@ export class SnakeGame extends Game {
   private foodVisible = true;
 
   init(): void {
-    // Load high score
     const saved = SaveState.load(HIGHSCORE_KEY);
     if (typeof saved === 'number') {
       this.highScore = saved;
     }
-    
-    // Initialize snake in center
+
     this.snake = [
-      { x: 10, y: 9 },
-      { x: 9, y: 9 },
-      { x: 8, y: 9 },
+      { x: 10, y: 10 },
+      { x: 9, y: 10 },
+      { x: 8, y: 10 },
     ];
     this.direction = { x: 1, y: 0 };
     this.nextDirection = { x: 1, y: 0 };
@@ -66,16 +66,13 @@ export class SnakeGame extends Game {
     this._gameOver = false;
     this.moveTimer = 0;
     this.moveInterval = BASE_SPEED;
-    
+
     this.spawnFood();
   }
 
   update(input: GamePadState, deltaTime: number): void {
-    if (this._gameOver) {
-      return;
-    }
+    if (this._gameOver) return;
 
-    // Handle direction input (queue to prevent 180° turns)
     if (input.up && this.direction.y !== 1) {
       this.nextDirection = { x: 0, y: -1 };
     } else if (input.down && this.direction.y !== -1) {
@@ -86,14 +83,12 @@ export class SnakeGame extends Game {
       this.nextDirection = { x: 1, y: 0 };
     }
 
-    // Move timer
     this.moveTimer += deltaTime * 1000;
     if (this.moveTimer >= this.moveInterval) {
       this.moveTimer = 0;
       this.moveSnake();
     }
 
-    // Food blink animation
     this.foodBlinkTimer += deltaTime;
     this.foodVisible = Math.floor(this.foodBlinkTimer * 8) % 2 === 0;
   }
@@ -107,8 +102,8 @@ export class SnakeGame extends Game {
       y: head.y + this.direction.y,
     };
 
-    // Wall collision
-    if (newHead.x < 0 || newHead.x >= GRID_WIDTH || newHead.y < 0 || newHead.y >= GRID_HEIGHT) {
+    // Wall collision (including HUD boundary at top)
+    if (newHead.x < 0 || newHead.x >= GRID_WIDTH || newHead.y < PLAY_TOP || newHead.y >= GRID_HEIGHT) {
       this.endGame();
       return;
     }
@@ -121,14 +116,11 @@ export class SnakeGame extends Game {
       }
     }
 
-    // Add new head
     this.snake.unshift(newHead);
 
-    // Check food
     if (this.food && newHead.x === this.food.x && newHead.y === this.food.y) {
       this.eatFood();
     } else {
-      // Remove tail
       this.snake.pop();
     }
   }
@@ -136,16 +128,13 @@ export class SnakeGame extends Game {
   private eatFood(): void {
     this._score++;
     this.audio.coin();
-    
-    // Increase speed
     this.moveInterval = Math.max(this.moveInterval * SPEED_INCREASE, MIN_SPEED);
-    
-    // Update high score
+
     if (this._score > this.highScore) {
       this.highScore = this._score;
       SaveState.save(HIGHSCORE_KEY, this.highScore);
     }
-    
+
     this.spawnFood();
   }
 
@@ -154,7 +143,7 @@ export class SnakeGame extends Game {
     do {
       this.food = {
         x: Math.floor(Math.random() * GRID_WIDTH),
-        y: Math.floor(Math.random() * GRID_HEIGHT),
+        y: PLAY_TOP + Math.floor(Math.random() * (GRID_HEIGHT - PLAY_TOP)),
       };
       attempts++;
     } while (attempts < 100 && this.snake.some(s => s.x === this.food!.x && s.y === this.food!.y));
@@ -170,7 +159,7 @@ export class SnakeGame extends Game {
 
     // Draw snake
     this.snake.forEach((segment, i) => {
-      const colorIndex = i === 0 ? 3 : 2; // Head darker
+      const colorIndex = i === 0 ? 3 : 2;
       renderer.drawRect(
         segment.x * GRID_SIZE,
         segment.y * GRID_SIZE,
@@ -190,6 +179,9 @@ export class SnakeGame extends Game {
         3
       );
     }
+
+    // HUD separator line
+    renderer.drawRect(0, HUD_HEIGHT, GAME_WIDTH, 1, 2);
 
     // Draw score
     renderer.drawText(`SCORE:${this._score}`, 4, 4, 3);

@@ -18,12 +18,10 @@ function GameBoyContent() {
     isRunning,
     isPaused,
     framebuffer,
-    fps,
     engineState,
     handleButtonChange,
     pause,
     resume,
-    goToMenu,
   } = useEngineContext();
 
   // Keyboard shortcuts for meta buttons
@@ -65,21 +63,19 @@ function GameBoyContent() {
         </TouchHandler>
       </GameBoyShell>
 
-      {/* Status bar */}
-      <div className="mt-3 flex items-center gap-4">
-        <p className="font-pixel text-[8px] text-shell-dark/60">
-          {engineState === EngineState.BOOT && 'BOOTING...'}
-          {engineState === EngineState.MENU && 'SELECT GAME'}
-          {engineState === EngineState.PLAYING && (isPaused ? 'PAUSED' : 'PLAYING')}
-          {engineState === EngineState.PAUSED && 'PAUSED'}
-          {engineState === EngineState.GAME_OVER && 'GAME OVER'}
+      <footer className="mt-4">
+        <p className="font-pixel text-[6px] text-shell-dark/40">
+          Made by{' '}
+          <a
+            href="https://github.com/hussain-ahmed2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-shell-dark/70 transition-colors"
+          >
+            Hussain Ahmed
+          </a>
         </p>
-        {fps > 0 && (
-          <p className="font-pixel text-[8px] text-shell-dark/60">
-            {fps} FPS
-          </p>
-        )}
-      </div>
+      </footer>
     </main>
   );
 }

@@ -94,11 +94,32 @@ export function useEngine(): UseEngineReturn {
         game.input = inputRef.current!;
         game.audio = audioRef.current!;
         game.init();
+        game.onReset();
 
         setIsRunning(true);
         setIsPaused(false);
 
+        stateMachineRef.current?.transition(EngineState.PLAYING);
+      },
+      onGameContinue: (gameId) => {
+        const game = createGame(gameId);
+        if (!game) return;
+
+        const info = getAllGames().find(g => g.id === gameId);
+
+        gameRef.current = game;
+        setCurrentGameId(gameId);
+        setGameInfo(info ?? null);
+
+        game.renderer = rendererInstance;
+        game.input = inputRef.current!;
+        game.audio = audioRef.current!;
+        game.init();
         game.loadFromStorage();
+
+        setIsRunning(true);
+        setIsPaused(false);
+
         stateMachineRef.current?.transition(EngineState.PLAYING);
       },
       onGameResume: () => {

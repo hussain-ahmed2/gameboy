@@ -7,6 +7,12 @@ import type { Game } from '@/engine/api';
 import { PongGame } from './pong/PongGame';
 import { SnakeGame } from './snake/SnakeGame';
 import { PlatformerGame } from './platformer/PlatformerGame';
+import { BreakoutGame } from './breakout/BreakoutGame';
+import { FlappyGame } from './flappy/FlappyGame';
+import { TetrisGame } from './tetris/TetrisGame';
+import { InvaderGame } from './invaders/InvaderGame';
+import { BombermanGame } from './bomberman/BombermanGame';
+import { Snake2Game } from './snake2/Snake2Game';
 
 export interface GameInfo {
   id: string;
@@ -33,6 +39,42 @@ export const gameRegistry: GameInfo[] = [
     name: 'PLATFORMER',
     description: 'Jump, collect coins, reach the flag',
     create: () => new PlatformerGame(),
+  },
+  {
+    id: 'breakout',
+    name: 'BREAKOUT',
+    description: 'Break all the bricks with the ball',
+    create: () => new BreakoutGame(),
+  },
+  {
+    id: 'flappy',
+    name: 'FLAPPY',
+    description: 'Tap to flap, avoid pipes, score points',
+    create: () => new FlappyGame(),
+  },
+  {
+    id: 'invaders',
+    name: 'INVADERS',
+    description: 'Defend Earth from alien invaders',
+    create: () => new InvaderGame(),
+  },
+  {
+    id: 'bomberman',
+    name: 'BOMBERMAN',
+    description: 'Place bombs, destroy blocks, find the exit',
+    create: () => new BombermanGame(),
+  },
+  {
+    id: 'tetris',
+    name: 'TETRIS',
+    description: 'Stack tetrominoes, clear lines, score points',
+    create: () => new TetrisGame(),
+  },
+  {
+    id: 'snake2',
+    name: 'SNAKE II',
+    description: 'Enhanced snake with portals and power-ups',
+    create: () => new Snake2Game(),
   },
 ];
 
