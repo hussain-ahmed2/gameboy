@@ -182,7 +182,7 @@ export class EngineStateMachine {
       this.menuIndex = games.length - 1;
     }
 
-    const maxVisible = 6;
+    const maxVisible = 7;
     if (this.menuIndex < this.menuScrollOffset) {
       this.menuScrollOffset = this.menuIndex;
     } else if (this.menuIndex >= this.menuScrollOffset + maxVisible) {
@@ -319,7 +319,7 @@ export class EngineStateMachine {
     const games = this.context.games;
     const startY = 24;
     const itemH = 30;
-    const maxVisible = 6;
+    const maxVisible = 7;
 
     for (let i = 0; i < maxVisible && i + this.menuScrollOffset < games.length; i++) {
       const idx = i + this.menuScrollOffset;
