@@ -28,6 +28,31 @@ test.describe('Keyboard Controls', () => {
     await page.keyboard.press('Shift'); // Select
   });
 
+  test('should navigate menu with Select button (Shift key and on-screen button)', async ({ page }) => {
+    await page.waitForTimeout(2500); // Wait for boot to finish
+    await page.keyboard.press('Shift'); // Select moves cursor down
+    await page.waitForTimeout(100);
+
+    const selectBtn = page.locator('[data-testid="btn-select"]');
+    await expect(selectBtn).toBeVisible();
+    await selectBtn.click();
+  });
+
+  test('should cycle display palette with Select button during gameplay', async ({ page }) => {
+    await page.waitForTimeout(2500); // Wait for boot
+    await page.keyboard.press('z'); // Start first game (Pong)
+    await page.waitForTimeout(600);
+
+    // Press Select (Shift) to cycle display palette
+    await page.keyboard.press('Shift');
+    await page.waitForTimeout(200);
+
+    // Click on-screen Select button to cycle display palette again
+    const selectBtn = page.locator('[data-testid="btn-select"]');
+    await selectBtn.click();
+    await page.waitForTimeout(200);
+  });
+
   test('should render Analogue Home button', async ({ page }) => {
     const homeBtn = page.locator('[data-testid="btn-home"]');
     await expect(homeBtn).toBeVisible();

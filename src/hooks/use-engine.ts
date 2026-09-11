@@ -181,7 +181,12 @@ export function useEngine(): UseEngineReturn {
         sm.update(deltaTime);
 
         const state = sm.getState();
-        if (state === EngineState.PLAYING) {
+        if (state === EngineState.BOOT) {
+          if (input.isJustPressed('select')) {
+            cycleDisplayMode();
+            audioRef.current?.boop();
+          }
+        } else if (state === EngineState.PLAYING) {
           // Modern GameBoy / Analogue: START button pauses active gameplay
           // Only pause if the game was ALREADY in PLAYING state before this frame
           // (prevents the Enter/START press used to launch the game from pausing it immediately)
@@ -193,6 +198,13 @@ export function useEngine(): UseEngineReturn {
             sm.transition(EngineState.PAUSED);
             input.update();
             return;
+          }
+
+          // Hardware Hotkey (Analogue Pocket / Game Boy Color):
+          // SELECT button during active gameplay cycles screen palette (DMG -> Pocket -> Light)
+          if (input.isJustPressed('select')) {
+            cycleDisplayMode();
+            audioRef.current?.boop();
           }
 
           rendererInstance.setGameScale(2);

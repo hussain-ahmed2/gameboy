@@ -61,7 +61,11 @@ export function MetaButton({ label, onButtonChange, className }: MetaButtonProps
   return (
     <div className="flex flex-col items-center">
       <div
-        title={`${label} Button`}
+        title={
+          label === 'Select'
+            ? 'Select Button (Shift: Navigate Menus / In-Game Palette)'
+            : 'Start Button (Enter: Launch / Pause)'
+        }
         className={cn(
           "relative w-9 h-9 rounded-full flex items-center justify-center",
           // Recessed shadow well in the chassis

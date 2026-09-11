@@ -205,7 +205,9 @@ function GameBoyContent() {
                     <span>•</span>
                     <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">P: SLEEP</span>
                     <span>•</span>
-                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">M: PALETTE</span>
+                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
+                        M / SELECT: PALETTE
+                    </span>
                     <span>•</span>
                     <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">S: SOUND</span>
                 </div>

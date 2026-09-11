@@ -177,7 +177,7 @@ export class EngineStateMachine {
     if (input.isJustPressed('up')) {
       this.menuIndex = (this.menuIndex - 1 + games.length) % games.length;
     }
-    if (input.isJustPressed('down')) {
+    if (input.isJustPressed('down') || input.isJustPressed('select')) {
       this.menuIndex = (this.menuIndex + 1) % games.length;
     }
     if (this.menuIndex >= games.length) {
@@ -211,7 +211,7 @@ export class EngineStateMachine {
     if (input.isJustPressed('up')) {
       this.gameSelectIndex = (this.gameSelectIndex + 2) % 3;
     }
-    if (input.isJustPressed('down')) {
+    if (input.isJustPressed('down') || input.isJustPressed('select')) {
       this.gameSelectIndex = (this.gameSelectIndex + 1) % 3;
     }
 
@@ -232,7 +232,7 @@ export class EngineStateMachine {
     if (input.isJustPressed('up')) {
       this.pauseIndex = (this.pauseIndex + 2) % 3;
     }
-    if (input.isJustPressed('down')) {
+    if (input.isJustPressed('down') || input.isJustPressed('select')) {
       this.pauseIndex = (this.pauseIndex + 1) % 3;
     }
 
@@ -261,7 +261,7 @@ export class EngineStateMachine {
     if (input.isJustPressed('up')) {
       this.gameOverIndex = (this.gameOverIndex + 2) % 3;
     }
-    if (input.isJustPressed('down')) {
+    if (input.isJustPressed('down') || input.isJustPressed('select')) {
       this.gameOverIndex = (this.gameOverIndex + 1) % 3;
     }
 
