@@ -22,6 +22,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://gameboy-engine.vercel.app/"),
   title: {
     template: "%s | GameBoy Engine",
     default: "GameBoy Game Engine - Web-based Retro Console",
