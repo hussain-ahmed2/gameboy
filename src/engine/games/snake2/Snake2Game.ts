@@ -160,6 +160,12 @@ export class Snake2Game extends Game {
       }
     }
 
+    // Obstacle collision at teleporter destination
+    if (this.obstacles.some(o => o.x === newHead.x && o.y === newHead.y)) {
+      this.endGame();
+      return;
+    }
+
     // Self collision
     for (let i = 0; i < this.snake.length - 1; i++) {
       if (this.snake[i].x === newHead.x && this.snake[i].y === newHead.y) {

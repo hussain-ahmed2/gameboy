@@ -6,7 +6,7 @@
 import { Game, Sprite } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
 import { SaveState } from '@/engine/core';
-import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
+import { GAME_WIDTH, GAME_HEIGHT, HUD_HEIGHT } from '@/lib/constants';
 
 const COLS = 13;
 const ROWS = 11;
@@ -60,6 +60,7 @@ interface BombermanSaveState {
   playerGx: number;
   playerGy: number;
   bombsPlaced: number;
+  activeBombs: number;
   maxBombs: number;
   fireRange: number;
   speedLevel: number;
@@ -583,10 +584,13 @@ export class BombermanGame extends Game {
 
     renderer.drawRect(this.playerPx + 1, this.playerPy + 1, TILE - 2, TILE - 2, 3);
 
+    // HUD separator
+    renderer.drawRect(0, HUD_HEIGHT, GAME_WIDTH, 1, 2);
+
     renderer.drawText(`SCORE:${this._score}`, 4, 4, 3);
 
     for (let i = 0; i < this._lives; i++) {
-      renderer.drawRect(4 + i * 8, 12, 5, 5, 3);
+      renderer.drawRect(GAME_WIDTH - 8 - i * 8, 4, 5, 5, 3);
     }
   }
 
@@ -607,6 +611,7 @@ export class BombermanGame extends Game {
       grid: this.grid.map(row => [...row]),
       playerGx: this.playerGx,
       playerGy: this.playerGy,
+      activeBombs: this.activeBombs,
       maxBombs: this.maxBombs,
       fireRange: this.fireRange,
       speedLevel: this.speedLevel,
@@ -641,7 +646,7 @@ export class BombermanGame extends Game {
     this._gameWon = false;
     this.bombs = [];
     this.explosions = [];
-    this.activeBombs = 0;
+    this.activeBombs = s.activeBombs ?? 0;
     this.bombCooldowns.clear();
     this.exitGx = s.exitGx;
     this.exitGy = s.exitGy;

@@ -87,7 +87,7 @@ export class PongGame extends Game {
     }
 
     // Player paddle movement
-    if (input.up && this.playerPaddle.y > 0) {
+    if (input.up && this.playerPaddle.y > HUD_HEIGHT) {
       this.playerPaddle.y -= PADDLE_SPEED * deltaTime;
     }
     if (input.down && this.playerPaddle.y < GAME_HEIGHT - PADDLE_HEIGHT) {
@@ -103,7 +103,7 @@ export class PongGame extends Game {
       const aiSpeed = PADDLE_SPEED * 0.7;
       if (aiDiff > 0 && this.aiPaddle.y < GAME_HEIGHT - PADDLE_HEIGHT) {
         this.aiPaddle.y += Math.min(aiSpeed * deltaTime, aiDiff);
-      } else if (aiDiff < 0 && this.aiPaddle.y > 0) {
+      } else if (aiDiff < 0 && this.aiPaddle.y > HUD_HEIGHT) {
         this.aiPaddle.y += Math.max(-aiSpeed * deltaTime, aiDiff);
       }
     }
@@ -113,8 +113,8 @@ export class PongGame extends Game {
     this.ball.y += this.ball.vy * deltaTime;
 
     // Ball collision with top/bottom walls
-    if (this.ball.y <= 0) {
-      this.ball.y = 0;
+    if (this.ball.y <= HUD_HEIGHT) {
+      this.ball.y = HUD_HEIGHT;
       this.ball.vy = Math.abs(this.ball.vy);
       this.audio.beep();
     } else if (this.ball.y >= GAME_HEIGHT - BALL_SIZE) {
@@ -172,7 +172,7 @@ export class PongGame extends Game {
     renderer.clear(0);
 
     // Draw center line
-    for (let y = 0; y < GAME_HEIGHT; y += 8) {
+    for (let y = HUD_HEIGHT; y < GAME_HEIGHT; y += 8) {
       renderer.drawRect(79, y, 2, 4, 2);
     }
 
@@ -232,8 +232,8 @@ export class PongGame extends Game {
   }
 
   private resetBall(): void {
-    this.ball.x = 80;
-    this.ball.y = 72;
+    this.ball.x = GAME_WIDTH / 2;
+    this.ball.y = GAME_HEIGHT / 2;
     this.ballSpeed = BALL_BASE_SPEED;
     
     const angle = (Math.random() - 0.5) * Math.PI / 2;

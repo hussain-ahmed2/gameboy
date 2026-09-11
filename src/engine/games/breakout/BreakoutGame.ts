@@ -22,7 +22,7 @@ const BRICK_ROWS = 8;
 const BRICK_COLS = 20;
 const BRICK_WIDTH = 8;
 const BRICK_HEIGHT = 4;
-const BRICKS_Y_OFFSET = 8;
+const BRICKS_Y_OFFSET = HUD_HEIGHT;
 
 const INITIAL_LIVES = 3;
 

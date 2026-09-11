@@ -6,14 +6,13 @@
 import { Game, Sprite } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
 import { SaveState } from '@/engine/core';
-import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
+import { GAME_WIDTH, GAME_HEIGHT, HUD_HEIGHT } from '@/lib/constants';
 
 const COLS = 10;
 const ROWS = 20;
 const TILE = 8;
 const FIELD_X = 40;
 const FIELD_Y = 16;
-const HUD_HEIGHT = 14;
 
 const HIGHSCORE_KEY = 'tetris_highscore';
 
@@ -41,6 +40,8 @@ interface TetrisSaveState {
   level: number;
   lines: number;
   fallTimer: number;
+  lockDelay: number;
+  isLocking: boolean;
 }
 
 const TETROMINOES: Record<TetrominoType, number[][]> = {
@@ -113,7 +114,6 @@ export class TetrisGame extends Game {
 
   private inputLeft = false;
   private inputRight = false;
-  private inputDown = false;
   private inputUp = false;
   private inputA = false;
 
@@ -140,7 +140,12 @@ export class TetrisGame extends Game {
   }
 
   update(input: GamePadState, deltaTime: number): void {
-    if (this._gameOver) return;
+    if (this._gameOver) {
+      if (input.start) {
+        this.init();
+      }
+      return;
+    }
 
     const dtMs = deltaTime * 1000;
 
@@ -171,7 +176,6 @@ export class TetrisGame extends Game {
         }
       }
     } else {
-      this.inputDown = false;
     }
 
     if (input.a && !this.inputA) {
@@ -262,6 +266,9 @@ export class TetrisGame extends Game {
 
     renderer.drawRect(FIELD_X - 1, FIELD_Y - 1, COLS * TILE + 2, ROWS * TILE + 2, 2);
 
+    // HUD separator
+    renderer.drawRect(0, HUD_HEIGHT, GAME_WIDTH, 1, 2);
+
     renderer.drawText('TETRIS', 4, 2, 3);
 
     const nextShape = TETROMINOES[this.nextType];
@@ -282,9 +289,12 @@ export class TetrisGame extends Game {
       }
     }
 
-    renderer.drawText(`${this._score}`, 4, FIELD_Y + 8, 3);
-    renderer.drawText(`${this._level}`, 4, FIELD_Y + 24, 2);
-    renderer.drawText(`${this._lines}`, 4, FIELD_Y + 40, 2);
+    renderer.drawText(`SCORE`, 4, FIELD_Y + 8, 2);
+    renderer.drawText(`${this._score}`, 4, FIELD_Y + 16, 3);
+    renderer.drawText(`LEVEL`, 4, FIELD_Y + 32, 2);
+    renderer.drawText(`${this._level}`, 4, FIELD_Y + 40, 3);
+    renderer.drawText(`LINES`, 4, FIELD_Y + 56, 2);
+    renderer.drawText(`${this._lines}`, 4, FIELD_Y + 64, 3);
   }
 
   getScore(): number {
@@ -310,6 +320,8 @@ export class TetrisGame extends Game {
       level: this._level,
       lines: this._lines,
       fallTimer: this.fallTimer,
+      lockDelay: this.lockDelay,
+      isLocking: this.isLocking,
     };
   }
 
@@ -331,8 +343,9 @@ export class TetrisGame extends Game {
     this._level = s.level;
     this._lines = s.lines;
     this.fallTimer = s.fallTimer;
+    this.lockDelay = s.lockDelay ?? 0;
+    this.isLocking = s.isLocking ?? false;
     this._gameOver = false;
-    this.isLocking = false;
   }
 
   private randomType(): TetrominoType {

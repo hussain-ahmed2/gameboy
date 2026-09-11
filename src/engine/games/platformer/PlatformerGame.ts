@@ -6,7 +6,7 @@
 import { Game, Sprite, TileMap } from '@/engine/api';
 import type { Renderer, GamePadState } from '@/lib/types';
 import { Audio, SaveState } from '@/engine/core';
-import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
+import { GAME_WIDTH, GAME_HEIGHT, HUD_HEIGHT } from '@/lib/constants';
 
 const GRAVITY = 400;
 const JUMP_VELOCITY = -180;
@@ -84,6 +84,7 @@ interface PlatformerSaveState {
   player: { x: number; y: number; vx: number; vy: number };
   currentLevel: number;
   coins: number;
+  totalCoins: number;
   cameraX: number;
   onGround: boolean;
   levelTiles: number[][];
@@ -183,6 +184,9 @@ export class PlatformerGame extends Game {
 
   update(input: GamePadState, deltaTime: number): void {
     if (this._gameWon || this._gameOver) {
+      if (input.start) {
+        this.init();
+      }
       return;
     }
 
@@ -370,9 +374,11 @@ export class PlatformerGame extends Game {
       this.player.colorIndex
     );
 
-    // Draw HUD
-    renderer.drawText(`COINS:${this._coins}/${this.totalCoins}`, 4, 4, 3);
-    renderer.drawText(`LVL${this.currentLevel + 1}`, 120, 4, 2);
+    // HUD background to cover game world behind it
+    renderer.drawRect(0, 0, GAME_WIDTH, HUD_HEIGHT, 0);
+    renderer.drawRect(0, HUD_HEIGHT, GAME_WIDTH, 1, 2);
+    renderer.drawText(`COINS:${this._coins}/${this.totalCoins}`, 4, 2, 3);
+    renderer.drawText(`LVL${this.currentLevel + 1}`, 120, 2, 2);
 
     if (this.levelComplete) {
       renderer.drawTextCentered('LEVEL COMPLETE!', 64, 3);
@@ -411,6 +417,7 @@ export class PlatformerGame extends Game {
       },
       currentLevel: this.currentLevel,
       coins: this._coins,
+      totalCoins: this.totalCoins,
       cameraX: this.cameraX,
       onGround: this.onGround,
       levelTiles: this.levelTiles,
@@ -425,6 +432,7 @@ export class PlatformerGame extends Game {
     this.player.vy = s.player.vy;
     this.currentLevel = s.currentLevel;
     this._coins = s.coins;
+    this.totalCoins = s.totalCoins;
     this.cameraX = s.cameraX;
     this.onGround = s.onGround;
     this._gameOver = false;

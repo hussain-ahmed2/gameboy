@@ -36,6 +36,7 @@ interface FlappySaveState {
   pipeTimer: number;
   score: number;
   groundScroll: number;
+  lastFlapState: boolean;
 }
 
 export class FlappyGame extends Game {
@@ -205,8 +206,8 @@ export class FlappyGame extends Game {
 
     // Draw pipes
     for (const pipe of this.pipes) {
-      // Top pipe
-      renderer.drawRect(pipe.x, 0, PIPE_WIDTH, pipe.gapY, 2);
+      // Top pipe (start from HUD_HEIGHT to avoid overlapping HUD)
+      renderer.drawRect(pipe.x, HUD_HEIGHT, PIPE_WIDTH, pipe.gapY - HUD_HEIGHT, 2);
       // Bottom pipe
       renderer.drawRect(pipe.x, pipe.gapY + PIPE_GAP, PIPE_WIDTH, GROUND_Y - pipe.gapY - PIPE_GAP, 2);
     }
@@ -263,6 +264,7 @@ export class FlappyGame extends Game {
       pipeTimer: this.pipeTimer,
       score: this._score,
       groundScroll: this.groundScroll,
+      lastFlapState: this.lastFlapState,
     };
   }
 
@@ -275,6 +277,7 @@ export class FlappyGame extends Game {
     this.pipeTimer = s.pipeTimer;
     this._score = s.score;
     this.groundScroll = s.groundScroll;
+    this.lastFlapState = s.lastFlapState ?? false;
     this._gameOver = false;
     this.bird.y = this.birdY;
   }

@@ -7,6 +7,7 @@ export { gameRegistry, getGameInfo, createGame, getGameIds, getAllGames, type Ga
 export { PongGame } from './pong/PongGame';
 export { SnakeGame } from './snake/SnakeGame';
 export { PlatformerGame } from './platformer/PlatformerGame';
+export { BreakoutGame } from './breakout/BreakoutGame';
 export { FlappyGame } from './flappy/FlappyGame';
 export { TetrisGame } from './tetris/TetrisGame';
 export { InvaderGame } from './invaders/InvaderGame';

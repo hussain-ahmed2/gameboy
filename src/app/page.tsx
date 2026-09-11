@@ -51,6 +51,22 @@ function GameBoyContent() {
         {/* Screen - always shows framebuffer (state machine handles what to draw) */}
         <Screen framebuffer={framebuffer} gameLoaded={true} />
 
+        {/* Mobile pause button - visible when game is running */}
+        {(engineState === EngineState.PLAYING || engineState === EngineState.PAUSED) && (
+          <button
+            onClick={() => {
+              if (engineState === EngineState.PLAYING) {
+                pause();
+              } else if (engineState === EngineState.PAUSED) {
+                resume();
+              }
+            }}
+            className="absolute top-2 right-2 font-pixel text-[8px] px-2 py-1 bg-black/20 rounded text-white/60 hover:text-white hover:bg-black/40 transition-colors z-10"
+          >
+            {engineState === EngineState.PAUSED ? 'RESUME' : 'PAUSE'}
+          </button>
+        )}
+
         {/* Controls */}
         <TouchHandler className="mt-4">
           <div className="flex items-center justify-between px-2">

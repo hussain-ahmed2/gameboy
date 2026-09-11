@@ -55,10 +55,14 @@ interface InvaderSaveState {
   lives: number;
   alienDirX: number;
   alienSpeed: number;
+  alienMoveTimer: number;
+  alienMoveInterval: number;
+  alienAnimFrame: number;
   alienBullets: AlienBullet[];
   playerBullet: { x: number; y: number; active: boolean } | null;
   shields: ShieldBlock[];
   alienShootTimer: number;
+  nextAlienShootTime: number;
 }
 
 export class InvaderGame extends Game {
@@ -480,10 +484,14 @@ export class InvaderGame extends Game {
       lives: this.lives,
       alienDirX: this.alienDirX,
       alienSpeed: this.alienSpeed,
-      alienBullets: this.alienBullets,
-      playerBullet: this.playerBullet,
-      shields: this.shields,
+      alienMoveTimer: this.alienMoveTimer,
+      alienMoveInterval: this.alienMoveInterval,
+      alienAnimFrame: this.alienAnimFrame,
+      alienBullets: this.alienBullets.map(b => ({ ...b })),
+      playerBullet: this.playerBullet ? { ...this.playerBullet } : null,
+      shields: this.shields.map(s => ({ ...s })),
       alienShootTimer: this.alienShootTimer,
+      nextAlienShootTime: this.nextAlienShootTime,
     };
   }
 
@@ -495,10 +503,14 @@ export class InvaderGame extends Game {
     this.lives = s.lives;
     this.alienDirX = s.alienDirX;
     this.alienSpeed = s.alienSpeed;
-    this.alienBullets = s.alienBullets;
-    this.playerBullet = s.playerBullet;
-    this.shields = s.shields;
+    this.alienMoveTimer = s.alienMoveTimer ?? 0;
+    this.alienMoveInterval = s.alienMoveInterval ?? 0.5;
+    this.alienAnimFrame = s.alienAnimFrame ?? 0;
+    this.alienBullets = s.alienBullets.map(b => ({ ...b }));
+    this.playerBullet = s.playerBullet ? { ...s.playerBullet } : null;
+    this.shields = s.shields.map(s => ({ ...s }));
     this.alienShootTimer = s.alienShootTimer;
+    this.nextAlienShootTime = s.nextAlienShootTime ?? ALIEN_SHOOT_INTERVAL_MIN;
     this._gameOver = false;
   }
 }
