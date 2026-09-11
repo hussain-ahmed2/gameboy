@@ -41,6 +41,8 @@ export class PongGame extends Game {
   private flashTimer = 0;
   private flashVisible = true;
   private highScore = 0;
+  private serveTimer = 0;  // pause before ball is served after a point
+  private readonly SERVE_DELAY = 1.5;
 
   init(): void {
     // Load high score
@@ -79,6 +81,7 @@ export class PongGame extends Game {
     this.ballSpeed = BALL_BASE_SPEED;
     this._gameOver = false;
     this.winner = null;
+    this.serveTimer = this.SERVE_DELAY; // start with a serve delay
   }
 
   update(input: GamePadState, deltaTime: number): void {
@@ -86,7 +89,7 @@ export class PongGame extends Game {
       return;
     }
 
-    // Player paddle movement
+    // Player paddle movement (always allowed, even during serve)
     if (input.up && this.playerPaddle.y > HUD_HEIGHT) {
       this.playerPaddle.y -= PADDLE_SPEED * deltaTime;
     }
@@ -94,11 +97,19 @@ export class PongGame extends Game {
       this.playerPaddle.y += PADDLE_SPEED * deltaTime;
     }
 
+    // Serve pause — ball is frozen, waiting before launch
+    if (this.serveTimer > 0) {
+      this.serveTimer -= deltaTime;
+      // Keep ball centred while waiting
+      this.ball.x = GAME_WIDTH / 2;
+      this.ball.y = GAME_HEIGHT / 2;
+      return;
+    }
+
     // AI paddle movement (tracks ball with delay)
     const aiCenter = this.aiPaddle.y + PADDLE_HEIGHT / 2;
     const ballCenter = this.ball.y + BALL_SIZE / 2;
     const aiDiff = ballCenter - aiCenter;
-    
     if (Math.abs(aiDiff) > 4) {
       const aiSpeed = PADDLE_SPEED * 0.7;
       if (aiDiff > 0 && this.aiPaddle.y < GAME_HEIGHT - PADDLE_HEIGHT) {
@@ -127,10 +138,8 @@ export class PongGame extends Game {
     if (this.ball.collidesWith(this.playerPaddle)) {
       this.ball.x = this.playerPaddle.x + PADDLE_WIDTH;
       this.ball.vx = Math.abs(this.ball.vx);
-      
       const hitPos = (this.ball.y + BALL_SIZE / 2) - (this.playerPaddle.y + PADDLE_HEIGHT / 2);
       this.ball.vy = (hitPos / (PADDLE_HEIGHT / 2)) * this.ballSpeed * 0.8;
-      
       this.increaseBallSpeed();
       this.audio.beep();
     }
@@ -139,10 +148,8 @@ export class PongGame extends Game {
     if (this.ball.collidesWith(this.aiPaddle)) {
       this.ball.x = this.aiPaddle.x - BALL_SIZE;
       this.ball.vx = -Math.abs(this.ball.vx);
-      
       const hitPos = (this.ball.y + BALL_SIZE / 2) - (this.aiPaddle.y + PADDLE_HEIGHT / 2);
       this.ball.vy = (hitPos / (PADDLE_HEIGHT / 2)) * this.ballSpeed * 0.8;
-      
       this.increaseBallSpeed();
       this.audio.beep();
     }
@@ -150,14 +157,20 @@ export class PongGame extends Game {
     // Score check
     if (this.ball.x < 0) {
       this.aiScore++;
-      this.checkWin();
-      if (!this._gameOver) this.resetBall();
       this.audio.boop();
+      this.checkWin();
+      if (!this._gameOver) {
+        this.resetBall();
+        this.serveTimer = this.SERVE_DELAY;
+      }
     } else if (this.ball.x > GAME_WIDTH) {
       this.playerScore++;
-      this.checkWin();
-      if (!this._gameOver) this.resetBall();
       this.audio.boop();
+      this.checkWin();
+      if (!this._gameOver) {
+        this.resetBall();
+        this.serveTimer = this.SERVE_DELAY;
+      }
     }
 
     // Flash effect on score
@@ -168,27 +181,43 @@ export class PongGame extends Game {
   }
 
   draw(renderer: Renderer): void {
-    // Clear with color 0 (lightest)
     renderer.clear(0);
 
-    // Draw center line
+    // Center dashed line
     for (let y = HUD_HEIGHT; y < GAME_HEIGHT; y += 8) {
       renderer.drawRect(79, y, 2, 4, 2);
     }
 
-    // Draw paddles and ball (flash on score)
+    // Paddles and ball
     if (this.flashTimer <= 0 || this.flashVisible) {
       this.playerPaddle.draw(renderer);
       this.aiPaddle.draw(renderer);
       this.ball.draw(renderer);
     }
 
+    // Serve countdown hint
+    if (this.serveTimer > 0 && !this._gameOver) {
+      renderer.drawTextCentered('READY...', GAME_HEIGHT / 2 + 16, 2);
+    }
+
     // HUD separator
     renderer.drawRect(0, HUD_HEIGHT, GAME_WIDTH, 1, 2);
 
-    // Draw scores
+    // Scores
     renderer.drawText(`${this.playerScore}`, 60, 4, 3);
     renderer.drawText(`${this.aiScore}`, 90, 4, 3);
+
+    // Winner overlay
+    if (this._gameOver && this.winner) {
+      renderer.drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT, 0);
+      if (this.winner === 'player') {
+        renderer.drawTextCentered('YOU WIN!', GAME_HEIGHT / 2 - 8, 3);
+      } else {
+        renderer.drawTextCentered('YOU LOSE', GAME_HEIGHT / 2 - 8, 3);
+      }
+      renderer.drawTextCentered(`${this.playerScore} - ${this.aiScore}`, GAME_HEIGHT / 2 + 8, 2);
+      renderer.drawTextCentered('PRESS A', GAME_HEIGHT / 2 + 24, 2);
+    }
   }
 
   getScore(): number {

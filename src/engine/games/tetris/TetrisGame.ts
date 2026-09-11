@@ -164,36 +164,26 @@ export class TetrisGame extends Game {
     }
     this.inputUp = input.up;
 
-    if (input.down) {
-      this.fallTimer += dtMs;
-      const interval = this.getFallInterval();
-      if (this.fallTimer >= interval) {
-        this.fallTimer = 0;
-        if (!this.movePiece(0, 1)) {
-          this.lockPiece();
-        } else {
-          this._score += 1;
-        }
-      }
-    } else {
-    }
-
     if (input.a && !this.inputA) {
       this.hardDrop();
     }
     this.inputA = input.a;
 
-    if (!input.down) {
-      this.fallTimer += dtMs;
-      const interval = this.getFallInterval();
-      if (this.fallTimer >= interval) {
-        this.fallTimer = 0;
-        if (!this.movePiece(0, 1)) {
-          if (!this.isLocking) {
-            this.isLocking = true;
-            this.lockDelay = 0;
-          }
+    // Fall timer — soft drop uses a fast fixed 50ms interval
+    const interval = input.down ? 50 : this.getFallInterval();
+    this.fallTimer += dtMs;
+    if (this.fallTimer >= interval) {
+      this.fallTimer = 0;
+      if (!this.movePiece(0, 1)) {
+        if (input.down) {
+          // Instant lock on soft drop (classic Tetris behaviour)
+          this.lockPiece();
+        } else if (!this.isLocking) {
+          this.isLocking = true;
+          this.lockDelay = 0;
         }
+      } else if (input.down) {
+        this._score += 1; // soft drop bonus point per row
       }
     }
 

@@ -78,10 +78,10 @@ export class InvaderGame extends Game {
   // Aliens
   private aliens: { x: number; y: number; alive: boolean; row: number; col: number }[] = [];
   private alienDirX = 1;
-  private alienSpeed = ALIEN_BASE_SPEED;
   private alienMoveTimer = 0;
   private alienMoveInterval = 0.5;
   private alienAnimFrame = 0;
+  private waveClearTimer = 0; // countdown shown after clearing a wave
 
   // Bullets
   private playerBullet: { x: number; y: number; active: boolean } | null = null;
@@ -125,10 +125,10 @@ export class InvaderGame extends Game {
     }
 
     this.alienDirX = 1;
-    this.alienSpeed = ALIEN_BASE_SPEED;
     this.alienMoveTimer = 0;
     this.alienMoveInterval = 0.5;
     this.alienAnimFrame = 0;
+    this.waveClearTimer = 0;
 
     // Bullets
     this.playerBullet = null;
@@ -299,11 +299,22 @@ export class InvaderGame extends Game {
     // Clean up inactive bullets
     this.alienBullets = this.alienBullets.filter(b => b.active);
 
-    // Check win
+    // Check win — show wave-clear message, then respawn after 2s
     if (this.aliens.every(a => !a.alive)) {
-      this.resetAliens();
+      if (this.waveClearTimer <= 0) {
+        this.waveClearTimer = 2.0; // start the countdown
+        this.alienBullets = [];    // clear any stray bullets
+      }
     }
-  }
+
+    if (this.waveClearTimer > 0) {
+      this.waveClearTimer -= deltaTime;
+      if (this.waveClearTimer <= 0) {
+        this.resetAliens();
+      }
+      return; // pause game while showing message
+    }
+  } // end update()
 
   private moveAliens(): void {
     const aliveAliens = this.aliens.filter(a => a.alive);
@@ -367,7 +378,6 @@ export class InvaderGame extends Game {
 
   private resetAliens(): void {
     this.alienDirX = 1;
-    this.alienSpeed = ALIEN_BASE_SPEED;
     this.alienMoveTimer = 0;
     this.alienMoveInterval = 0.5;
 
@@ -390,7 +400,7 @@ export class InvaderGame extends Game {
   private updateAlienSpeed(): void {
     const aliveCount = this.aliens.filter(a => a.alive).length;
     const deadCount = ALIEN_ROWS * ALIEN_COLS - aliveCount;
-    this.alienSpeed = ALIEN_BASE_SPEED + deadCount * 2;
+    // Faster step interval as more aliens are killed
     this.alienMoveInterval = Math.max(0.05, 0.5 - deadCount * 0.02);
   }
 
@@ -462,7 +472,13 @@ export class InvaderGame extends Game {
     for (let i = 0; i < this.lives; i++) {
       renderer.drawRect(GAME_WIDTH - 8 - i * 10, 4, 6, 6, 3);
     }
-  }
+
+    // Wave-clear overlay
+    if (this.waveClearTimer > 0) {
+      renderer.drawTextCentered('WAVE CLEAR!', GAME_HEIGHT / 2 - 8, 3);
+      renderer.drawTextCentered('GET READY', GAME_HEIGHT / 2 + 8, 2);
+    }
+  } // end draw()
 
   getScore(): number {
     return this._score;
@@ -483,7 +499,6 @@ export class InvaderGame extends Game {
       score: this._score,
       lives: this.lives,
       alienDirX: this.alienDirX,
-      alienSpeed: this.alienSpeed,
       alienMoveTimer: this.alienMoveTimer,
       alienMoveInterval: this.alienMoveInterval,
       alienAnimFrame: this.alienAnimFrame,
@@ -502,7 +517,6 @@ export class InvaderGame extends Game {
     this._score = s.score;
     this.lives = s.lives;
     this.alienDirX = s.alienDirX;
-    this.alienSpeed = s.alienSpeed;
     this.alienMoveTimer = s.alienMoveTimer ?? 0;
     this.alienMoveInterval = s.alienMoveInterval ?? 0.5;
     this.alienAnimFrame = s.alienAnimFrame ?? 0;
