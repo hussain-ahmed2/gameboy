@@ -288,8 +288,8 @@ export function drawRect(
   const screenH = SCREEN_HEIGHT;
   const startX = Math.max(0, Math.floor(x));
   const startY = Math.max(0, Math.floor(y));
-  const endX = Math.min(screenW, startX + Math.ceil(w));
-  const endY = Math.min(screenH, startY + Math.ceil(h));
+  const endX = Math.min(screenW, Math.floor(x) + Math.ceil(w));
+  const endY = Math.min(screenH, Math.floor(y) + Math.ceil(h));
 
   for (let py = startY; py < endY; py++) {
     const base = py * screenW;
