@@ -57,6 +57,9 @@ function GameBoyContent() {
                 background: "var(--bg-gradient, var(--bg))",
             }}
         >
+            {/* Semantic H1 for SEO (visually hidden) */}
+            <h1 className="sr-only">GameBoy Game Engine - Play Classic Retro Web Games</h1>
+
             {/* Soft Ambient Studio Lighting Halo behind Console */}
             <div
                 className="pointer-events-none absolute w-[460px] h-[640px] max-w-full rounded-full blur-3xl opacity-75 transition-all duration-700 -z-10"
