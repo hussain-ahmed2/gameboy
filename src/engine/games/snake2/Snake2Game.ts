@@ -299,9 +299,13 @@ export class Snake2Game extends Game {
   draw(renderer: Renderer): void {
     renderer.clear(0);
 
-    // Draw obstacles
+    // Draw obstacles (striped blocks)
     for (const obs of this.obstacles) {
-      renderer.drawRect(obs.x * GRID_SIZE, obs.y * GRID_SIZE, GRID_SIZE - 1, GRID_SIZE - 1, 3);
+      const bx = obs.x * GRID_SIZE;
+      const by = obs.y * GRID_SIZE;
+      renderer.drawRect(bx, by, GRID_SIZE - 1, GRID_SIZE - 1, 3);
+      renderer.drawRect(bx + 1, by + 1, GRID_SIZE - 3, GRID_SIZE - 3, 2);
+      renderer.drawRect(bx + 2, by + 2, GRID_SIZE - 5, GRID_SIZE - 5, 3);
     }
 
     // Draw teleporters (animated)
@@ -320,21 +324,41 @@ export class Snake2Game extends Game {
       renderer.drawRect(seg.x * GRID_SIZE, seg.y * GRID_SIZE, GRID_SIZE - 1, GRID_SIZE - 1, color);
     }
 
-    // Draw snake head
+    // Draw snake head with eyes
     const head = this.snake[0];
-    renderer.drawRect(head.x * GRID_SIZE, head.y * GRID_SIZE, GRID_SIZE - 1, GRID_SIZE - 1, 3);
-
-    // Draw normal food (blinking)
-    const foodVisible = Math.floor(this.animTimer * 8) % 2 === 0;
-    if (this.food && foodVisible) {
-      renderer.drawRect(this.food.x * GRID_SIZE, this.food.y * GRID_SIZE, GRID_SIZE - 1, GRID_SIZE - 1, 3);
+    const hx = head.x * GRID_SIZE;
+    const hy = head.y * GRID_SIZE;
+    renderer.drawRect(hx, hy, GRID_SIZE - 1, GRID_SIZE - 1, 3);
+    
+    // Eyes based on direction
+    if (this.direction.x === 1) { // Right
+      renderer.drawRect(hx + 4, hy + 1, 2, 2, 0);
+      renderer.drawRect(hx + 4, hy + 4, 2, 2, 0);
+    } else if (this.direction.x === -1) { // Left
+      renderer.drawRect(hx + 1, hy + 1, 2, 2, 0);
+      renderer.drawRect(hx + 1, hy + 4, 2, 2, 0);
+    } else if (this.direction.y === 1) { // Down
+      renderer.drawRect(hx + 1, hy + 4, 2, 2, 0);
+      renderer.drawRect(hx + 4, hy + 4, 2, 2, 0);
+    } else if (this.direction.y === -1) { // Up
+      renderer.drawRect(hx + 1, hy + 1, 2, 2, 0);
+      renderer.drawRect(hx + 4, hy + 1, 2, 2, 0);
     }
 
-    // Draw special food (golden, pulsing)
+    // Draw normal food (blinking, smaller square)
+    const foodVisible = Math.floor(this.animTimer * 8) % 2 === 0;
+    if (this.food && foodVisible) {
+      renderer.drawRect(this.food.x * GRID_SIZE + 2, this.food.y * GRID_SIZE + 2, 4, 4, 3);
+    }
+
+    // Draw special food (golden, pulsing cross)
     if (this.specialFood) {
       const pulse = Math.floor(this.animTimer * 6) % 2;
       const sColor = pulse === 0 ? 1 : 2;
-      renderer.drawRect(this.specialFood.x * GRID_SIZE, this.specialFood.y * GRID_SIZE, GRID_SIZE - 1, GRID_SIZE - 1, sColor);
+      const sx = this.specialFood.x * GRID_SIZE;
+      const sy = this.specialFood.y * GRID_SIZE;
+      renderer.drawRect(sx + 3, sy + 1, 2, 6, sColor);
+      renderer.drawRect(sx + 1, sy + 3, 6, 2, sColor);
     }
 
     // HUD separator line
