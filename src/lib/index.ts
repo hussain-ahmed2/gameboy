@@ -23,6 +23,9 @@ export {
   TARGET_FPS,
   FIXED_TIMESTEP,
   DMG_PALETTE,
+  DISPLAY_MODES,
+  DISPLAY_PALETTES,
+  type DisplayMode,
   KEY_MAP,
   type ColorIndex,
 } from './constants';

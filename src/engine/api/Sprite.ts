@@ -4,7 +4,6 @@
  */
 
 import type { SpriteFrame, Renderer, ColorIndex } from '@/lib/types';
-import { DMG_PALETTE } from '@/lib/constants';
 
 export class Sprite {
   x: number;

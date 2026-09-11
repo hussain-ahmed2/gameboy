@@ -9,4 +9,5 @@ export { ActionButtons } from './action-buttons';
 export { ActionButton } from './action-button';
 export { MetaButtons } from './meta-buttons';
 export { MetaButton } from './meta-button';
+export { HomeButton } from './home-button';
 export { TouchHandler } from './touch-handler';

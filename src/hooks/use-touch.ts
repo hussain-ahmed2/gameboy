@@ -4,7 +4,7 @@
  *   Prevents default scroll/zoom behavior on touch elements.
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import type { GameBoyButton } from '@/lib/types';
 
 /**
@@ -18,7 +18,9 @@ export function useTouch(
   onButtonChange: (button: GameBoyButton, pressed: boolean) => void
 ) {
   const callbackRef = useRef(onButtonChange);
-  callbackRef.current = onButtonChange;
+  useEffect(() => {
+    callbackRef.current = onButtonChange;
+  }, [onButtonChange]);
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {

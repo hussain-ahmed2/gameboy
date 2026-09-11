@@ -90,6 +90,8 @@ export class EngineStateMachine {
     this.state = newState;
     this.enterState(newState);
     this.context.onStateChange(newState);
+    // Consume input buffer on state change to prevent menu keypress leaking into gameplay
+    this.context.input?.update();
   }
 
   update(deltaTime: number): void {
@@ -288,8 +290,8 @@ export class EngineStateMachine {
 
     const progress = Math.min(this.bootTimer / this.bootDuration, 1);
 
-    // Title: "GAME BOY" centered
-    renderer.drawTextCentered('GAME BOY', 50, 3);
+    // Title: "HA POCKET" centered
+    renderer.drawTextCentered('HA POCKET', 50, 3);
 
     // Loading bar
     const barW = 200;
@@ -300,8 +302,8 @@ export class EngineStateMachine {
     renderer.drawRect(barX, barY, barW, barH, 1);
     renderer.drawRect(barX, barY, Math.floor(barW * progress), barH, 3);
 
-    // Made by credit
-    if (progress > 0.5) {
+    // Made by credit on boot screen
+    if (progress > 0.4) {
       renderer.drawTextCentered('MADE BY HUSSAIN AHMED', SCREEN_HEIGHT - 36, 2);
     }
   }

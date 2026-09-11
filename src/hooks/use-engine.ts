@@ -11,7 +11,7 @@ import { createGame, getAllGames, type GameInfo } from '@/engine/games';
 import { Game } from '@/engine/api/Game';
 import type { GamePadState } from '@/lib/types';
 import type { GameOverInfo } from '@/engine/core/EngineStateMachine';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '@/lib/constants';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, type DisplayMode } from '@/lib/constants';
 
 interface UseEngineReturn {
   currentGameId: string;
@@ -22,6 +22,10 @@ interface UseEngineReturn {
   fps: number;
   engineState: EngineState;
   gameOverInfo: GameOverInfo | null;
+  displayMode: DisplayMode;
+  cycleDisplayMode: () => void;
+  setDisplayMode: (mode: DisplayMode) => void;
+  togglePause: () => void;
   loadGame: (gameId: string) => void;
   start: () => void;
   pause: () => void;
@@ -46,6 +50,7 @@ export function useEngine(): UseEngineReturn {
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null);
   const [engineState, setEngineState] = useState<EngineState>(EngineState.BOOT);
   const [gameOverInfo, setGameOverInfo] = useState<GameOverInfo | null>(null);
+  const [displayMode, setDisplayModeState] = useState<DisplayMode>('dmg');
 
   const gameLoopRef = useRef<GameLoop | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -58,6 +63,19 @@ export function useEngine(): UseEngineReturn {
   const frameCountRef = useRef(0);
   const lastFpsTimeRef = useRef(0);
   const gamepadRef = useRef<GamePadState>({ ...initialGamepad });
+
+  const setDisplayMode = useCallback((mode: DisplayMode) => {
+    setDisplayModeState(mode);
+    rendererRef.current?.setDisplayMode(mode);
+  }, []);
+
+  const cycleDisplayMode = useCallback(() => {
+    setDisplayModeState((prev) => {
+      const next: DisplayMode = prev === 'dmg' ? 'pocket' : prev === 'pocket' ? 'light' : 'dmg';
+      rendererRef.current?.setDisplayMode(next);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const canvas = document.createElement('canvas');
@@ -99,6 +117,7 @@ export function useEngine(): UseEngineReturn {
         setIsRunning(true);
         setIsPaused(false);
 
+        inputRef.current?.update();
         stateMachineRef.current?.transition(EngineState.PLAYING);
       },
       onGameContinue: (gameId) => {
@@ -120,10 +139,12 @@ export function useEngine(): UseEngineReturn {
         setIsRunning(true);
         setIsPaused(false);
 
+        inputRef.current?.update();
         stateMachineRef.current?.transition(EngineState.PLAYING);
       },
       onGameResume: () => {
         setIsPaused(false);
+        inputRef.current?.update();
         stateMachineRef.current?.transition(EngineState.PLAYING);
       },
       onGameRestart: () => {
@@ -133,12 +154,14 @@ export function useEngine(): UseEngineReturn {
         }
         setIsPaused(false);
         setGameOverInfo(null);
+        inputRef.current?.update();
         stateMachineRef.current?.transition(EngineState.PLAYING);
       },
       onGameMenu: () => {
         setIsRunning(false);
         setIsPaused(false);
         setGameOverInfo(null);
+        inputRef.current?.update();
         stateMachineRef.current?.transition(EngineState.MENU);
       },
     });
@@ -149,10 +172,25 @@ export function useEngine(): UseEngineReturn {
         const sm = stateMachineRef.current;
         if (!input || !sm) return;
 
+        const prevState = sm.getState();
+
         sm.update(deltaTime);
 
         const state = sm.getState();
         if (state === EngineState.PLAYING) {
+          // Modern GameBoy / Analogue: START button pauses active gameplay
+          // Only pause if the game was ALREADY in PLAYING state before this frame
+          // (prevents the Enter/START press used to launch the game from pausing it immediately)
+          if (prevState === EngineState.PLAYING && input.isJustPressed('start')) {
+            sm.captureGameFrame(rendererInstance.getFramebuffer());
+            gameRef.current?.onPause();
+            audioRef.current?.boop();
+            setIsPaused(true);
+            sm.transition(EngineState.PAUSED);
+            input.update();
+            return;
+          }
+
           rendererInstance.setGameScale(2);
           const game = gameRef.current;
           if (game) {
@@ -211,11 +249,27 @@ export function useEngine(): UseEngineReturn {
     window.addEventListener('keydown', initAudio);
     window.addEventListener('touchstart', initAudio);
 
+    // Auto-sleep when window/tab is blurred or phone screen locked
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        const sm = stateMachineRef.current;
+        const renderer = rendererRef.current;
+        if (sm && renderer && sm.getState() === EngineState.PLAYING) {
+          sm.captureGameFrame(renderer.getFramebuffer());
+          gameRef.current?.onPause();
+          setIsPaused(true);
+          sm.transition(EngineState.PAUSED);
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     gameLoopRef.current.start();
 
     return () => {
       gameLoopRef.current?.stop();
       audioRef.current?.dispose();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('click', initAudio);
       window.removeEventListener('keydown', initAudio);
       window.removeEventListener('touchstart', initAudio);
@@ -306,9 +360,21 @@ export function useEngine(): UseEngineReturn {
     return () => cancelAnimationFrame(frameId);
   }, []);
 
+  const togglePause = useCallback(() => {
+    const sm = stateMachineRef.current;
+    if (!sm) return;
+    const state = sm.getState();
+    if (state === EngineState.PLAYING) {
+      pause();
+    } else if (state === EngineState.PAUSED) {
+      resume();
+    }
+  }, [pause, resume]);
+
   return {
     currentGameId, gameInfo, isRunning, isPaused, framebuffer, fps,
-    engineState, gameOverInfo, loadGame, start, pause, resume, reset,
+    engineState, gameOverInfo, displayMode, cycleDisplayMode, setDisplayMode,
+    togglePause, loadGame, start, pause, resume, reset,
     goToMenu, handleButtonChange, setVolume,
   };
 }

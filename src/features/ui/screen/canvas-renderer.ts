@@ -4,33 +4,35 @@
  *   Draws framebuffer to canvas with DMG palette.
  */
 
-import { SCREEN_WIDTH, SCREEN_HEIGHT, DMG_PALETTE } from '@/lib/constants';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, DISPLAY_PALETTES_UINT32, type DisplayMode } from '@/lib/constants';
+
+let cachedImageData: ImageData | null = null;
+let cachedUint32View: Uint32Array | null = null;
 
 /**
- * Render the framebuffer to a canvas context.
+ * Render the framebuffer to a canvas context with zero per-frame garbage collection.
+ * Uses 32-bit direct buffer mapping for 60 FPS performance.
  * @param ctx - Canvas 2D rendering context
  * @param framebuffer - 160x144 Uint8Array with color indices 0-3
+ * @param displayMode - Analogue display filter (dmg, pocket, light)
  */
 export function renderFramebuffer(
   ctx: CanvasRenderingContext2D,
-  framebuffer: Uint8Array
+  framebuffer: Uint8Array,
+  displayMode: DisplayMode = 'dmg'
 ): void {
-  const imageData = ctx.createImageData(SCREEN_WIDTH, SCREEN_HEIGHT);
-  const data = imageData.data;
-
-  for (let i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-    const colorIndex = framebuffer[i] & 3;
-    const hex = DMG_PALETTE[colorIndex];
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-
-    const pixelIndex = i * 4;
-    data[pixelIndex] = r;
-    data[pixelIndex + 1] = g;
-    data[pixelIndex + 2] = b;
-    data[pixelIndex + 3] = 255;
+  if (!cachedImageData) {
+    cachedImageData = ctx.createImageData(SCREEN_WIDTH, SCREEN_HEIGHT);
+    cachedUint32View = new Uint32Array(cachedImageData.data.buffer);
   }
 
-  ctx.putImageData(imageData, 0, 0);
+  const palette = DISPLAY_PALETTES_UINT32[displayMode] ?? DISPLAY_PALETTES_UINT32.dmg;
+  const pixels = cachedUint32View!;
+  const total = SCREEN_WIDTH * SCREEN_HEIGHT;
+
+  for (let i = 0; i < total; i++) {
+    pixels[i] = palette[framebuffer[i] & 3];
+  }
+
+  ctx.putImageData(cachedImageData, 0, 0);
 }

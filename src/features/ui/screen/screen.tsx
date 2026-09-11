@@ -8,7 +8,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '@/lib/constants';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, type DisplayMode } from '@/lib/constants';
 import { renderFramebuffer } from './canvas-renderer';
 import { ScanlineOverlay } from './scanline-overlay';
 import { ScreenBezel } from './screen-bezel';
@@ -19,14 +19,21 @@ interface ScreenProps {
   framebuffer: Uint8Array | null;
   /** Whether to show the canvas (always true now, state machine handles content) */
   gameLoaded: boolean;
+  /** Active display profile (dmg, pocket, light) */
+  displayMode?: DisplayMode;
   /** Additional CSS classes */
   className?: string;
 }
 
-export function Screen({ framebuffer, gameLoaded, className }: ScreenProps) {
+export function Screen({ framebuffer, displayMode = 'dmg', className }: ScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fbRef = useRef(framebuffer);
-  fbRef.current = framebuffer;
+  const modeRef = useRef(displayMode);
+
+  useEffect(() => {
+    fbRef.current = framebuffer;
+    modeRef.current = displayMode;
+  }, [framebuffer, displayMode]);
 
   useEffect(() => {
     let animId: number;
@@ -35,7 +42,7 @@ export function Screen({ framebuffer, gameLoaded, className }: ScreenProps) {
       const fb = fbRef.current;
       if (canvas && fb) {
         const ctx = canvas.getContext('2d');
-        if (ctx) renderFramebuffer(ctx, fb);
+        if (ctx) renderFramebuffer(ctx, fb, modeRef.current);
       }
       animId = requestAnimationFrame(render);
     };

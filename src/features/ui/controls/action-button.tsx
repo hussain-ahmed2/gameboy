@@ -12,13 +12,15 @@ import { cn } from '@/lib/cn';
 interface ActionButtonProps {
   /** Button label (A or B) */
   label: GameBoyButton;
+  /** Display label (Y, X, B, A) */
+  displayLabel?: string;
   /** Callback on press state change */
   onButtonChange: (button: GameBoyButton, pressed: boolean) => void;
   /** Additional CSS classes */
   className?: string;
 }
 
-export function ActionButton({ label, onButtonChange, className }: ActionButtonProps) {
+export function ActionButton({ label, displayLabel, onButtonChange, className }: ActionButtonProps) {
   const touchActive = useRef(false);
 
   const handlePress = useCallback(() => {
@@ -59,24 +61,41 @@ export function ActionButton({ label, onButtonChange, className }: ActionButtonP
   }, [handleRelease]);
 
   return (
-    <button
-      data-testid={`btn-${label.toLowerCase()}`}
+    <div
+      title={`${displayLabel || label} Button`}
       className={cn(
-        'w-14 h-14 rounded-full bg-btn-ab',
-        'flex items-center justify-center',
-        'font-pixel text-[10px] text-white/80',
-        'active:scale-95 active:shadow-inner',
-        'transition-transform select-none touch-none',
-        className
+        "relative w-11 h-11 rounded-full flex items-center justify-center",
+        // Recessed shadow well in the shell
+        "bg-black/45 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_1px_1px_rgba(255,255,255,0.08)]",
+        className,
       )}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      aria-label={`${label} button`}
     >
-      {label}
-    </button>
+      <button
+        data-testid={`btn-${(displayLabel || label).toLowerCase()}`}
+        tabIndex={-1}
+        className={cn(
+          "w-10 h-10 rounded-full bg-btn-ab",
+          // Tactile cylindrical button with top specular sheen and bottom depth
+          "shadow-[0_3px_7px_rgba(0,0,0,0.75),inset_0_1.5px_1px_rgba(255,255,255,0.25),inset_0_-1px_1px_rgba(0,0,0,0.5)]",
+          "hover:brightness-110 active:brightness-90",
+          "active:translate-y-[1px] active:shadow-[0_1px_2px_rgba(0,0,0,0.8),inset_0_1px_2px_rgba(0,0,0,0.7)]",
+          "flex items-center justify-center",
+          // Large, crisp, high-contrast typography easily visible to all eyes
+          "font-sans font-bold text-[13px] tracking-wide text-white/85 hover:text-white",
+          "transition-all duration-150 select-none touch-none cursor-pointer group",
+        )}
+        style={{
+          textShadow: "0 1px 1px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0,0,0,0.5)",
+        }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        aria-label={`${displayLabel || label} button`}
+      >
+        <span className="select-none">{displayLabel || label}</span>
+      </button>
+    </div>
   );
 }

@@ -13,7 +13,8 @@ export class Audio {
   private ensureContext(): void {
     if (this.initialized) return;
     
-    this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    this.ctx = new AudioCtx();
     this.masterGain = this.ctx.createGain();
     this.masterGain.connect(this.ctx.destination);
     this.masterGain.gain.value = 0.5;

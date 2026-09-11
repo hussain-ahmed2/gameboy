@@ -3,8 +3,8 @@
  * @description Tile-based background map with collision detection.
  */
 
-import type { Tile, Renderer, ColorIndex } from '@/lib/types';
-import { DMG_PALETTE, GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
+import type { Tile, Renderer } from '@/lib/types';
+import { GAME_WIDTH, GAME_HEIGHT } from '@/lib/constants';
 
 export class TileMap {
   width: number;

@@ -59,24 +59,39 @@ export function MetaButton({ label, onButtonChange, className }: MetaButtonProps
   }, [handleRelease]);
 
   return (
-    <button
-      data-testid={`btn-${label.toLowerCase()}`}
-      className={cn(
-        'px-4 py-1.5 rounded-full bg-btn-meta',
-        'font-pixel text-[6px] text-white/70 uppercase',
-        'active:scale-95 active:shadow-inner',
-        'transition-transform select-none touch-none',
-        'rotate-[-25deg]',
-        className
-      )}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      aria-label={`${label} button`}
-    >
-      {label}
-    </button>
+    <div className="flex flex-col items-center">
+      <div
+        title={`${label} Button`}
+        className={cn(
+          "relative w-9 h-9 rounded-full flex items-center justify-center",
+          // Recessed shadow well in the chassis
+          "bg-black/45 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_1px_1px_rgba(255,255,255,0.08)]",
+          className,
+        )}
+      >
+        <button
+          data-testid={`btn-${label.toLowerCase()}`}
+          tabIndex={-1}
+          className={cn(
+            "w-7 h-7 rounded-full",
+            "bg-btn-meta hover:brightness-110 active:brightness-75",
+            // Tactile cylindrical dome depth
+            "shadow-[0_2px_5px_rgba(0,0,0,0.75),inset_0_1.5px_1px_rgba(255,255,255,0.25)]",
+            "active:scale-95 active:shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.8)]",
+            "transition-all duration-150 select-none touch-none",
+            "flex items-center justify-center cursor-pointer",
+          )}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          aria-label={`${label} button`}
+        />
+      </div>
+      <span className="font-sans font-bold text-[9px] tracking-wider text-white/70 mt-1 uppercase select-none">
+        {label}
+      </span>
+    </div>
   );
 }

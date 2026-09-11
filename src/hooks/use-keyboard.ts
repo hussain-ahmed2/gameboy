@@ -16,7 +16,9 @@ export function useKeyboard(
   onButtonChange: (button: GameBoyButton, pressed: boolean) => void
 ) {
   const callbackRef = useRef(onButtonChange);
-  callbackRef.current = onButtonChange;
+  useEffect(() => {
+    callbackRef.current = onButtonChange;
+  }, [onButtonChange]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const button = KEY_MAP[e.key];

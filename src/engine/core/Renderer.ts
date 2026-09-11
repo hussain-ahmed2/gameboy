@@ -4,7 +4,13 @@
  *   Supports 320x288 output with game scale mode (renders at 160x144, scales 2x).
  */
 
-import { SCREEN_WIDTH, SCREEN_HEIGHT, DMG_PALETTE, type ColorIndex } from '@/lib/constants';
+import {
+  SCREEN_WIDTH,
+  SCREEN_HEIGHT,
+  DISPLAY_PALETTES_UINT32,
+  type DisplayMode,
+  type ColorIndex,
+} from '@/lib/constants';
 import type { Sprite, TileMap, SpriteFrame } from '@/lib/types';
 import {
   drawText as bmDrawText,
@@ -23,8 +29,10 @@ export class Renderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private imageData: ImageData;
+  private uint32Data: Uint32Array;
   private framebuffer: Uint8Array;
   private gameScale = 1;
+  private displayMode: DisplayMode = 'dmg';
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -39,6 +47,17 @@ export class Renderer {
 
     this.framebuffer = new Uint8Array(SCREEN_WIDTH * SCREEN_HEIGHT);
     this.imageData = this.ctx.createImageData(SCREEN_WIDTH, SCREEN_HEIGHT);
+    this.uint32Data = new Uint32Array(this.imageData.data.buffer);
+  }
+
+  /** Set active display mode */
+  setDisplayMode(mode: DisplayMode): void {
+    this.displayMode = mode;
+  }
+
+  /** Get active display mode */
+  getDisplayMode(): DisplayMode {
+    return this.displayMode;
   }
 
   /** Set game scale mode (1 = menu/UI mode, 2 = game mode at 160x144) */
@@ -191,25 +210,15 @@ export class Renderer {
     return this.canvas;
   }
 
-  /** Flush framebuffer to canvas */
+  /** Flush framebuffer to canvas with zero-allocation direct 32-bit blit */
   flushFramebuffer(): void {
-    const data = this.ctx.createImageData(SCREEN_WIDTH, SCREEN_HEIGHT);
-    const pixels = data.data;
+    const palette = DISPLAY_PALETTES_UINT32[this.displayMode] ?? DISPLAY_PALETTES_UINT32.dmg;
+    const total = SCREEN_WIDTH * SCREEN_HEIGHT;
 
-    for (let i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-      const colorIndex = this.framebuffer[i] & 3;
-      const hex = DMG_PALETTE[colorIndex];
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-
-      const idx = i * 4;
-      pixels[idx] = r;
-      pixels[idx + 1] = g;
-      pixels[idx + 2] = b;
-      pixels[idx + 3] = 255;
+    for (let i = 0; i < total; i++) {
+      this.uint32Data[i] = palette[this.framebuffer[i] & 3];
     }
 
-    this.ctx.putImageData(data, 0, 0);
+    this.ctx.putImageData(this.imageData, 0, 0);
   }
 }

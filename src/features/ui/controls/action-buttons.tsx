@@ -20,13 +20,29 @@ export function ActionButtons({ onButtonChange, className }: ActionButtonsProps)
     <div
       data-testid="action-buttons"
       className={cn(
-        'flex gap-3 items-end',
-        'rotate-[-20deg]',
-        className
+        "relative w-[124px] h-[124px] flex items-center justify-center",
+        className,
       )}
     >
-      <ActionButton label="B" onButtonChange={onButtonChange} />
-      <ActionButton label="A" onButtonChange={onButtonChange} />
+      {/* Top: X button */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2">
+        <ActionButton label="A" displayLabel="X" onButtonChange={onButtonChange} />
+      </div>
+
+      {/* Left: Y button */}
+      <div className="absolute left-0 top-1/2 -translate-y-1/2">
+        <ActionButton label="B" displayLabel="Y" onButtonChange={onButtonChange} />
+      </div>
+
+      {/* Right: A button (Primary) */}
+      <div className="absolute right-0 top-1/2 -translate-y-1/2">
+        <ActionButton label="A" displayLabel="A" onButtonChange={onButtonChange} />
+      </div>
+
+      {/* Bottom: B button (Secondary) */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
+        <ActionButton label="B" displayLabel="B" onButtonChange={onButtonChange} />
+      </div>
     </div>
   );
 }

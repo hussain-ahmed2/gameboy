@@ -27,4 +27,9 @@ test.describe('Keyboard Controls', () => {
     await page.keyboard.press('Enter'); // Start
     await page.keyboard.press('Shift'); // Select
   });
+
+  test('should render Analogue Home button', async ({ page }) => {
+    const homeBtn = page.locator('[data-testid="btn-home"]');
+    await expect(homeBtn).toBeVisible();
+  });
 });

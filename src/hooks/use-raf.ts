@@ -4,7 +4,7 @@
  *   Provides start/stop controls and handles cleanup.
  */
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 /**
  * Hook that manages a requestAnimationFrame loop.
@@ -19,28 +19,31 @@ export function useRaf(
   const frameRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  callbackRef.current = callback;
-
-  const tick = useCallback((timestamp: number) => {
-    if (lastTimeRef.current === 0) {
-      lastTimeRef.current = timestamp;
-    }
-    const deltaTime = (timestamp - lastTimeRef.current) / 1000; // Convert to seconds
-    lastTimeRef.current = timestamp;
-
-    callbackRef.current(deltaTime);
-    frameRef.current = requestAnimationFrame(tick);
-  }, []);
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
 
   useEffect(() => {
-    if (isRunning) {
-      lastTimeRef.current = 0;
-      frameRef.current = requestAnimationFrame(tick);
-    }
+    if (!isRunning) return;
+
+    lastTimeRef.current = 0;
+    const loop = (timestamp: number) => {
+      if (lastTimeRef.current === 0) {
+        lastTimeRef.current = timestamp;
+      }
+      const deltaTime = (timestamp - lastTimeRef.current) / 1000;
+      lastTimeRef.current = timestamp;
+
+      callbackRef.current(deltaTime);
+      frameRef.current = requestAnimationFrame(loop);
+    };
+
+    frameRef.current = requestAnimationFrame(loop);
+
     return () => {
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current);
       }
     };
-  }, [isRunning, tick]);
+  }, [isRunning]);
 }

@@ -1,24 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  /* Colorful GameBoy Palette */
-  --shell: #7ec8e3;
-  --shell-dark: #5ba3c9;
-  --bezel: #2d3748;
+  /* Default Edition: Noir Black */
+  --shell: #161619;
+  --shell-dark: #0e0e11;
+  --shell-border: #26262d;
+  --shell-text: rgba(255, 255, 255, 0.4);
+  --shell-accent: #38bdf8;
+  --bezel: #08080a;
   --lcd-light: #9bbc0f;
   --lcd-med: #8bac0f;
   --lcd-dark: #306230;
   --lcd-darkest: #0f380f;
-  --btn-ab: #e53e3e;
-  --btn-ab-hover: #c53030;
-  --btn-meta: #a0aec0;
-  --btn-meta-hover: #cbd5e0;
-  --dpad: #1a202c;
-  --dpad-hover: #2d3748;
-  --led: #48bb78;
-  --bg: #1a1a2e;
-  --accent: #9f7aea;
-  --accent-glow: rgba(159, 122, 234, 0.4);
+  --btn-ab: #222329;
+  --btn-ab-hover: #2f3039;
+  --btn-meta: #222329;
+  --btn-meta-hover: #2f3039;
+  --dpad: #222329;
+  --dpad-hover: #2f3039;
+  --led: #10b981;
+  --bg: #09090c;
+  --accent: #38bdf8;
+  --accent-glow: rgba(56, 189, 248, 0.4);
+}
+
+/* Kiwi Green Edition (Reference Image 1) */
+[data-shell-edition="kiwi"] {
+  --shell: #7ee647;
+  --shell-dark: #58ab30;
+  --shell-border: #6cd13b;
+  --shell-text: rgba(22, 60, 10, 0.55);
+  --btn-ab: #70d83a;
+  --btn-ab-hover: #83ed4b;
+  --btn-meta: #67c736;
+  --btn-meta-hover: #7ae045;
+  --dpad: #70d83a;
+  --dpad-hover: #83ed4b;
+}
+
+/* Pure White Edition (Reference Image 3) */
+[data-shell-edition="white"] {
+  --shell: #f0f2f5;
+  --shell-dark: #d2d5dc;
+  --shell-border: #e0e3e8;
+  --shell-text: rgba(40, 44, 52, 0.45);
+  --btn-ab: #e4e7ed;
+  --btn-ab-hover: #ffffff;
+  --btn-meta: #dcdee4;
+  --btn-meta-hover: #eceef4;
+  --dpad: #e4e7ed;
+  --dpad-hover: #ffffff;
 }
 
 @theme inline {
