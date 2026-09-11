@@ -69,7 +69,7 @@ export function DPadButton({ direction, onButtonChange, className }: DPadButtonP
       className={cn(
         "w-[34px] h-[34px] bg-dpad",
         "flex items-center justify-center",
-        "transition-all duration-150 select-none touch-none cursor-pointer group",
+        "transition-all duration-75 select-none touch-none cursor-pointer group",
         "hover:brightness-110 active:brightness-95",
         direction === "Up" && "rounded-t-[5px] active:translate-y-[-1px]",
         direction === "Down" && "rounded-b-[5px] active:translate-y-[1px]",
@@ -93,7 +93,7 @@ export function DPadButton({ direction, onButtonChange, className }: DPadButtonP
         height="11"
         viewBox="0 0 24 24"
         fill="currentColor"
-        className="text-shell-ink group-hover:brightness-110 transition-all duration-150"
+        className="text-shell-ink group-hover:brightness-110 transition-all duration-75"
         style={{
           filter: "drop-shadow(var(--shell-ink-shadow))",
         }}

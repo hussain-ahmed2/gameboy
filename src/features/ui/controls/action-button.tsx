@@ -84,7 +84,7 @@ export function ActionButton({ label, displayLabel, onButtonChange, className }:
           "flex items-center justify-center",
           // Large, crisp, high-contrast typography easily visible to all eyes
           "font-sans font-bold text-[13px] tracking-wide text-shell-ink",
-          "transition-all duration-150 select-none touch-none cursor-pointer group",
+          "transition-all duration-75 select-none touch-none cursor-pointer group",
         )}
         style={{
           boxShadow: "var(--shell-btn-shadow)",

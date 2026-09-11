@@ -84,7 +84,7 @@ export function MetaButton({ label, onButtonChange, className }: MetaButtonProps
             "w-7 h-7 rounded-full",
             "bg-btn-meta hover:brightness-110 active:brightness-75",
             "active:scale-95 active:shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.8)]",
-            "transition-all duration-150 select-none touch-none",
+            "transition-all duration-75 select-none touch-none",
             "flex items-center justify-center cursor-pointer",
           )}
           style={{

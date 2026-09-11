@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { EngineProvider, useEngineContext } from "@/features/store";
 import { GameBoyShell } from "@/features/ui/shell";
 import { Screen } from "@/features/ui/screen";
@@ -171,7 +171,13 @@ function GameBoyContent() {
                             className="text-emerald-400"
                         >
                             <path d="M11 5L6 9H2v6h4l5 4V5z" />
-                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                            <path
+                                d="M15.54 8.46a5 5 0 0 1 0 7.07"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                            />
                         </svg>
                     )}
                     <span>{isMuted ? "MUTED" : "SOUND"}</span>
@@ -249,11 +255,11 @@ function GameBoyContent() {
 }
 
 export default function Home() {
-    const [isMounted, setIsMounted] = useState(false);
-    
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    const isMounted = useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false,
+    );
 
     if (!isMounted) {
         return null;
