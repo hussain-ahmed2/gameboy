@@ -82,6 +82,7 @@ export class InvaderGame extends Game {
   private alienMoveInterval = 0.5;
   private alienAnimFrame = 0;
   private waveClearTimer = 0; // countdown shown after clearing a wave
+  private readyTimer = 0;     // GET READY freeze at game start / after death
 
   // Bullets
   private playerBullet: { x: number; y: number; active: boolean } | null = null;
@@ -129,6 +130,7 @@ export class InvaderGame extends Game {
     this.alienMoveInterval = 0.5;
     this.alienAnimFrame = 0;
     this.waveClearTimer = 0;
+    this.readyTimer = 2.0; // freeze at game start
 
     // Bullets
     this.playerBullet = null;
@@ -158,6 +160,11 @@ export class InvaderGame extends Game {
       return;
     }
 
+    // GET READY freeze — pause everything while countdown runs
+    if (this.readyTimer > 0) {
+      this.readyTimer -= deltaTime;
+      return;
+    }
     // Player movement
     if (input.left) {
       this.playerX -= PLAYER_SPEED * deltaTime;
@@ -368,11 +375,12 @@ export class InvaderGame extends Game {
     if (this.lives <= 0) {
       this._gameOver = true;
     } else {
-      // Reset player position
+      // Reset player position and give 1.5s to regroup
       this.playerX = (GAME_WIDTH - PLAYER_WIDTH) / 2;
       this.playerBullet = null;
       this.alienBullets = [];
       this.initShields();
+      this.readyTimer = 1.5;
     }
   }
 
@@ -477,6 +485,11 @@ export class InvaderGame extends Game {
     if (this.waveClearTimer > 0) {
       renderer.drawTextCentered('WAVE CLEAR!', GAME_HEIGHT / 2 - 8, 3);
       renderer.drawTextCentered('GET READY', GAME_HEIGHT / 2 + 8, 2);
+    }
+
+    // Get-ready overlay (game start / after death)
+    if (this.readyTimer > 0 && this.waveClearTimer <= 0) {
+      renderer.drawTextCentered('GET READY', GAME_HEIGHT / 2, 3);
     }
   } // end draw()
 

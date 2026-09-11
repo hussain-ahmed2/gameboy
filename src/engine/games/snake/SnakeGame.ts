@@ -48,6 +48,7 @@ export class SnakeGame extends Game {
   private moveInterval = BASE_SPEED;
   private foodBlinkTimer = 0;
   private foodVisible = true;
+  private readyTimer = 0; // freeze before game starts
 
   init(): void {
     const saved = SaveState.load(HIGHSCORE_KEY);
@@ -66,6 +67,7 @@ export class SnakeGame extends Game {
     this._gameOver = false;
     this.moveTimer = 0;
     this.moveInterval = BASE_SPEED;
+    this.readyTimer = 2.0; // 2s freeze on start
 
     this.spawnFood();
   }
@@ -73,6 +75,16 @@ export class SnakeGame extends Game {
   update(input: GamePadState, deltaTime: number): void {
     if (this._gameOver) return;
 
+    // Freeze before game starts — accept direction input but don't move yet
+    if (this.readyTimer > 0) {
+      this.readyTimer -= deltaTime;
+      // still let player pre-select direction
+      if (input.up && this.direction.y !== 1)       this.nextDirection = { x: 0, y: -1 };
+      else if (input.down && this.direction.y !== -1) this.nextDirection = { x: 0, y: 1 };
+      else if (input.left && this.direction.x !== 1)  this.nextDirection = { x: -1, y: 0 };
+      else if (input.right && this.direction.x !== -1) this.nextDirection = { x: 1, y: 0 };
+      return;
+    }
     if (input.up && this.direction.y !== 1) {
       this.nextDirection = { x: 0, y: -1 };
     } else if (input.down && this.direction.y !== -1) {
@@ -186,6 +198,11 @@ export class SnakeGame extends Game {
     // Draw score
     renderer.drawText(`SCORE:${this._score}`, 4, 4, 3);
     renderer.drawText(`HIGH:${this.highScore}`, 90, 4, 2);
+
+    // Get-ready overlay
+    if (this.readyTimer > 0) {
+      renderer.drawTextCentered('GET READY', GAME_HEIGHT / 2 - 4, 3);
+    }
   }
 
   getScore(): number {

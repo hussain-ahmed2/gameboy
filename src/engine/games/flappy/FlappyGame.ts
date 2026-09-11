@@ -55,6 +55,8 @@ export class FlappyGame extends Game {
   private flapPressed = false;
   private lastFlapState = false;
   private flashTimer = 0;
+  private waitingForStart = true;  // tap-to-start state
+  private hoverTimer = 0;          // drives the idle bob animation
 
   init(): void {
     const saved = SaveState.load(HIGHSCORE_KEY);
@@ -78,10 +80,31 @@ export class FlappyGame extends Game {
     this._gameOver = false;
     this.groundScroll = 0;
     this.flashTimer = 0;
+    this.waitingForStart = true;
+    this.hoverTimer = 0;
   }
 
   update(input: GamePadState, deltaTime: number): void {
     if (this._gameOver) {
+      return;
+    }
+
+    // ── Tap-to-start: bird hovers until first A press ──
+    if (this.waitingForStart) {
+      this.hoverTimer += deltaTime;
+      // Gentle sine-wave bob
+      this.birdY = GAME_HEIGHT / 2 - BIRD_SIZE / 2 + Math.sin(this.hoverTimer * 3) * 3;
+      this.bird.y = this.birdY;
+      this.birdVy = 0;
+      // Scroll ground for visual interest
+      this.groundScroll = (this.groundScroll + PIPE_SPEED * deltaTime) % 8;
+
+      const aPressed = input.a || input.up;
+      if (aPressed && !this.lastFlapState) {
+        this.waitingForStart = false;
+        this.flap(); // first flap launches the bird
+      }
+      this.lastFlapState = aPressed;
       return;
     }
 
@@ -286,6 +309,12 @@ export class FlappyGame extends Game {
       renderer.drawText(`SCORE: ${this._score}`, 44, 68, 2);
       renderer.drawText(`HIGH: ${this.highScore}`, 44, 80, 2);
       renderer.drawText('PRESS A', 48, 100, 3);
+    }
+
+    // Tap-to-start overlay
+    if (this.waitingForStart) {
+      renderer.drawTextCentered('FLAPPY BIRD', GAME_HEIGHT / 2 - 24, 3);
+      renderer.drawTextCentered('PRESS A', GAME_HEIGHT / 2 + 12, 2);
     }
   }
 
