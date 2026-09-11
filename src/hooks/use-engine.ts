@@ -34,6 +34,9 @@ interface UseEngineReturn {
   goToMenu: () => void;
   handleButtonChange: (button: string, pressed: boolean) => void;
   setVolume: (volume: number) => void;
+  isMuted: boolean;
+  toggleMute: () => boolean;
+  playClick: () => void;
 }
 
 const initialGamepad: GamePadState = {
@@ -51,6 +54,7 @@ export function useEngine(): UseEngineReturn {
   const [engineState, setEngineState] = useState<EngineState>(EngineState.BOOT);
   const [gameOverInfo, setGameOverInfo] = useState<GameOverInfo | null>(null);
   const [displayMode, setDisplayModeState] = useState<DisplayMode>('dmg');
+  const [isMuted, setIsMuted] = useState(false);
 
   const gameLoopRef = useRef<GameLoop | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -243,11 +247,11 @@ export function useEngine(): UseEngineReturn {
       audioRef.current?.resume();
       window.removeEventListener('click', initAudio);
       window.removeEventListener('keydown', initAudio);
-      window.removeEventListener('touchstart', initAudio);
+      window.removeEventListener('pointerdown', initAudio);
     };
     window.addEventListener('click', initAudio);
     window.addEventListener('keydown', initAudio);
-    window.addEventListener('touchstart', initAudio);
+    window.addEventListener('pointerdown', initAudio);
 
     // Auto-sleep when window/tab is blurred or phone screen locked
     const handleVisibilityChange = () => {
@@ -272,7 +276,7 @@ export function useEngine(): UseEngineReturn {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('click', initAudio);
       window.removeEventListener('keydown', initAudio);
-      window.removeEventListener('touchstart', initAudio);
+      window.removeEventListener('pointerdown', initAudio);
     };
   }, []);
 
@@ -327,8 +331,24 @@ export function useEngine(): UseEngineReturn {
     stateMachineRef.current?.transition(EngineState.MENU);
   }, []);
 
+  const toggleMute = useCallback(() => {
+    if (audioRef.current) {
+      const muted = audioRef.current.toggleMute();
+      setIsMuted(muted);
+      return muted;
+    }
+    return false;
+  }, []);
+
+  const playClick = useCallback(() => {
+    audioRef.current?.playClick();
+  }, []);
+
   const handleButtonChange = useCallback(
     (button: string, pressed: boolean) => {
+      if (pressed) {
+        audioRef.current?.playClick();
+      }
       const buttonToKey: Record<string, keyof GamePadState> = {
         Up: 'up', Down: 'down', Left: 'left', Right: 'right',
         A: 'a', B: 'b', Start: 'start', Select: 'select',
@@ -376,5 +396,6 @@ export function useEngine(): UseEngineReturn {
     engineState, gameOverInfo, displayMode, cycleDisplayMode, setDisplayMode,
     togglePause, loadGame, start, pause, resume, reset,
     goToMenu, handleButtonChange, setVolume,
+    isMuted, toggleMute, playClick,
   };
 }

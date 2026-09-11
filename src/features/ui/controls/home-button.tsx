@@ -23,7 +23,7 @@ export function HomeButton({ onPress, isPaused = false, className }: HomeButtonP
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       touchActive.current = true;
       onPress();
     },
@@ -31,7 +31,7 @@ export function HomeButton({ onPress, isPaused = false, className }: HomeButtonP
   );
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     touchActive.current = false;
   }, []);
 

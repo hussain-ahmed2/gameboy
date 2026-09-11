@@ -18,7 +18,9 @@ interface TouchHandlerProps {
 
 export function TouchHandler({ children, className }: TouchHandlerProps) {
   const preventScroll = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
   }, []);
 
   return (

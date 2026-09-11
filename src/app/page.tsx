@@ -14,8 +14,18 @@ import { DPad, ActionButtons, MetaButtons, TouchHandler } from "@/features/ui/co
 
 function GameBoyContent() {
     const [shellEdition, setShellEdition] = useState<"noir" | "kiwi" | "white">("noir");
-    const { isRunning, isPaused, framebuffer, displayMode, cycleDisplayMode, togglePause, handleButtonChange } =
-        useEngineContext();
+    const {
+        isRunning,
+        isPaused,
+        framebuffer,
+        displayMode,
+        cycleDisplayMode,
+        togglePause,
+        handleButtonChange,
+        isMuted,
+        toggleMute,
+        playClick,
+    } = useEngineContext();
 
     // Keyboard shortcuts for meta buttons and quick system controls
     useEffect(() => {
@@ -28,11 +38,16 @@ function GameBoyContent() {
             if (e.key === "m" || e.key === "M") {
                 cycleDisplayMode();
             }
+            // 's' or 'S' = Toggle Sound/Mute
+            if (e.key === "s" || e.key === "S") {
+                const muted = toggleMute();
+                if (!muted) playClick();
+            }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [togglePause, cycleDisplayMode]);
+    }, [togglePause, cycleDisplayMode, toggleMute, playClick]);
 
     return (
         <main
@@ -50,12 +65,15 @@ function GameBoyContent() {
                 }}
             />
 
-            {/* Centered Settings: Shell Colors & Screen Display Palette */}
-            <div className="flex items-center justify-center gap-2.5 mb-3 select-none">
+            {/* Centered Settings: Shell Colors, Screen Display Palette & Sound Toggle */}
+            <div className="flex items-center justify-center gap-2 mb-3 select-none">
                 {/* Shell Edition Swatches */}
                 <div className="flex items-center bg-white/5 backdrop-blur-sm rounded-full p-1 border border-white/10 shadow-sm gap-1.5">
                     <button
-                        onClick={() => setShellEdition("noir")}
+                        onClick={() => {
+                            playClick();
+                            setShellEdition("noir");
+                        }}
                         title="Noir Black Shell"
                         aria-label="Noir Black Shell"
                         className={`w-5 h-5 rounded-full bg-[#161619] border transition-all cursor-pointer ${
@@ -65,7 +83,10 @@ function GameBoyContent() {
                         }`}
                     />
                     <button
-                        onClick={() => setShellEdition("kiwi")}
+                        onClick={() => {
+                            playClick();
+                            setShellEdition("kiwi");
+                        }}
                         title="Kiwi Green Shell"
                         aria-label="Kiwi Green Shell"
                         className={`w-5 h-5 rounded-full bg-[#7ee647] border transition-all cursor-pointer ${
@@ -75,7 +96,10 @@ function GameBoyContent() {
                         }`}
                     />
                     <button
-                        onClick={() => setShellEdition("white")}
+                        onClick={() => {
+                            playClick();
+                            setShellEdition("white");
+                        }}
                         title="Pure White Shell"
                         aria-label="Pure White Shell"
                         className={`w-5 h-5 rounded-full bg-[#f0f2f5] border transition-all cursor-pointer ${
@@ -88,7 +112,10 @@ function GameBoyContent() {
 
                 {/* Screen Color Palette Mode */}
                 <button
-                    onClick={cycleDisplayMode}
+                    onClick={() => {
+                        playClick();
+                        cycleDisplayMode();
+                    }}
                     title="Click or press 'M' to cycle screen color mode"
                     className="font-sans font-bold text-[9px] tracking-wider px-2.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 hover:border-white/20 text-white/90 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
                 >
@@ -102,6 +129,47 @@ function GameBoyContent() {
                     <span>
                         {displayMode === "dmg" ? "DMG GREEN" : displayMode === "pocket" ? "POCKET B&W" : "LIGHT TEAL"}
                     </span>
+                </button>
+
+                {/* Sound / Mute Toggle */}
+                <button
+                    onClick={() => {
+                        const muted = toggleMute();
+                        if (!muted) playClick();
+                    }}
+                    title={isMuted ? "Unmute Audio (Sound is Off)" : "Mute Audio (Sound is On)"}
+                    aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+                    className="font-sans font-bold text-[9px] tracking-wider px-2.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 hover:border-white/20 text-white/90 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                    {isMuted ? (
+                        <svg
+                            width="11"
+                            height="11"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-amber-400"
+                        >
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        </svg>
+                    ) : (
+                        <svg
+                            width="11"
+                            height="11"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="text-emerald-400"
+                        >
+                            <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                        </svg>
+                    )}
+                    <span>{isMuted ? "MUTED" : "SOUND"}</span>
                 </button>
             </div>
 
@@ -118,7 +186,10 @@ function GameBoyContent() {
                     <div className="mt-5 flex justify-center">
                         <MetaButtons
                             onButtonChange={handleButtonChange}
-                            onHomePress={togglePause}
+                            onHomePress={() => {
+                                playClick();
+                                togglePause();
+                            }}
                             isPaused={isPaused}
                         />
                     </div>
@@ -135,6 +206,8 @@ function GameBoyContent() {
                     <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">P: SLEEP</span>
                     <span>•</span>
                     <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">M: PALETTE</span>
+                    <span>•</span>
+                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">S: SOUND</span>
                 </div>
 
                 {/* Made By Credit & GitHub Profile Link */}

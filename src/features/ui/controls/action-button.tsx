@@ -32,13 +32,13 @@ export function ActionButton({ label, displayLabel, onButtonChange, className }:
   }, [label, onButtonChange]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     touchActive.current = true;
     handlePress();
   }, [handlePress]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     touchActive.current = false;
     handleRelease();
   }, [handleRelease]);
