@@ -302,10 +302,8 @@ export class EngineStateMachine {
     renderer.drawRect(barX, barY, barW, barH, 1);
     renderer.drawRect(barX, barY, Math.floor(barW * progress), barH, 3);
 
-    // Made by credit on boot screen
-    if (progress > 0.4) {
-      renderer.drawTextCentered('MADE BY HUSSAIN AHMED', SCREEN_HEIGHT - 36, 2);
-    }
+    // Made by credit on boot screen (always displayed)
+    renderer.drawTextCentered('MADE BY HUSSAIN AHMED', SCREEN_HEIGHT - 36, 2);
   }
 
   private drawMenu(renderer: RendererType): void {
