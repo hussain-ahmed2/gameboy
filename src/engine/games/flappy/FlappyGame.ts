@@ -239,27 +239,37 @@ export class FlappyGame extends Game {
       renderer.drawRect(drawX, GROUND_Y, 4, 2, 1);
     }
 
-    // Draw retro Game Boy bird (8x8 pixel art)
+    // Draw side-view bird: round pea body, pointy beak, tail feathers, animated wing
     if (this.flashTimer <= 0 || Math.floor(this.flashTimer * 10) % 2 === 0) {
       const bx = Math.floor(BIRD_X);
       const by = Math.floor(this.birdY);
       const flapping = this.birdVy < 0;
 
-      // Body (dark shade)
-      renderer.drawRect(bx + 1, by + 1, 6, 6, 3);
-      // Belly highlight
-      renderer.drawRect(bx + 2, by + 4, 3, 2, 2);
-      // Big retro eye
-      renderer.drawRect(bx + 4, by + 1, 2, 2, 0);
-      renderer.drawRect(bx + 5, by + 2, 1, 1, 3);
-      // Beak
-      renderer.drawRect(bx + 6, by + 3, 2, 2, 2);
-      renderer.drawRect(bx + 7, by + 4, 1, 1, 3);
-      // Wing flaps up when ascending, tucks when falling
+      // ── Tail feathers (left side, color 2) ──
+      // Two forked feathers pointing left
+      renderer.drawRect(bx,     by + 2, 2, 1, 2); // upper tail feather
+      renderer.drawRect(bx,     by + 4, 2, 1, 2); // lower tail feather
+
+      // ── Body (pea / round shape, color 3 darkest) ──
+      renderer.drawRect(bx + 2, by + 1, 4, 1, 3); // top arc
+      renderer.drawRect(bx + 1, by + 2, 5, 4, 3); // wide mid (rows 2-5)
+      renderer.drawRect(bx + 2, by + 6, 4, 1, 3); // bottom arc
+
+      // ── Eye (white, upper-right of body — the "face" side) ──
+      renderer.drawRect(bx + 4, by + 2, 2, 2, 0); // eye white
+      renderer.drawRect(bx + 5, by + 3, 1, 1, 3); // pupil
+
+      // ── Beak (pointy, color 2, pointing right) ──
+      renderer.drawRect(bx + 6, by + 3, 2, 1, 2); // upper beak plate (2px wide)
+      renderer.drawRect(bx + 6, by + 4, 1, 1, 2); // lower beak tip  (1px = point)
+
+      // ── Wing (color 1, animates up when flapping / down when falling) ──
       if (flapping) {
-        renderer.drawRect(bx + 1, by, 3, 2, 1);
+        // Wing raised — drawn above body
+        renderer.drawRect(bx + 2, by,     3, 1, 1);
       } else {
-        renderer.drawRect(bx + 1, by + 3, 3, 2, 1);
+        // Wing tucked — drawn at base of body
+        renderer.drawRect(bx + 2, by + 6, 3, 1, 1);
       }
     }
 
