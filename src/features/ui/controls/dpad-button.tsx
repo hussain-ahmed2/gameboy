@@ -63,18 +63,19 @@ export function DPadButton({ direction, onButtonChange, className }: DPadButtonP
       data-testid={`dpad-${direction.toLowerCase()}`}
       tabIndex={-1}
       className={cn(
-        "w-9 h-9 bg-dpad",
+        "w-[34px] h-[34px] bg-dpad",
         "flex items-center justify-center",
         "transition-all duration-150 select-none touch-none cursor-pointer group",
-        "hover:brightness-115 active:brightness-90",
-        // Tactile depth matching the action buttons
-        "shadow-[0_2px_5px_rgba(0,0,0,0.6)]",
-        direction === "Up" && "rounded-t-md shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.28),inset_1px_0_1px_rgba(255,255,255,0.12),inset_-1px_0_1px_rgba(0,0,0,0.4)]",
-        direction === "Down" && "rounded-b-md shadow-[inset_0_-1.5px_1px_rgba(0,0,0,0.6),inset_1px_0_1px_rgba(255,255,255,0.12),inset_-1px_0_1px_rgba(0,0,0,0.4)]",
-        direction === "Left" && "rounded-l-md shadow-[inset_1.5px_0_1px_rgba(255,255,255,0.25),inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.4)]",
-        direction === "Right" && "rounded-r-md shadow-[inset_-1.5px_0_1px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.4)]",
+        "hover:brightness-110 active:brightness-95",
+        direction === "Up" && "rounded-t-[5px] active:translate-y-[-1px]",
+        direction === "Down" && "rounded-b-[5px] active:translate-y-[1px]",
+        direction === "Left" && "rounded-l-[5px] active:translate-x-[-1px]",
+        direction === "Right" && "rounded-r-[5px] active:translate-x-[1px]",
         className,
       )}
+      style={{
+        boxShadow: "var(--shell-btn-shadow)",
+      }}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
