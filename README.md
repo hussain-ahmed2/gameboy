@@ -2,7 +2,7 @@
 
 ![Gameplay Screenshot](docs/gameplay.png)
 
-A **GameBoy-inspired game engine** built with Next.js 14, React 18, Tailwind CSS v4, and TypeScript. Write games in TypeScript - no ROMs, no assembly, no external tools. The engine provides a GameBoy-compatible API (160×144, 4-color palette, sprites, tilemaps, input, audio) and runs your TypeScript game code at a smooth 60 FPS.
+A **GameBoy-inspired game engine** built with Next.js 16, React 19, Tailwind CSS v4, and TypeScript. Write games in TypeScript - no ROMs, no assembly, no external tools. The engine provides a GameBoy-compatible API (160×144, 4-color palette, sprites, tilemaps, input, audio) and runs your TypeScript game code at a smooth 60 FPS.
 
 ## ✨ Features
 
@@ -10,7 +10,7 @@ A **GameBoy-inspired game engine** built with Next.js 14, React 18, Tailwind CSS
 - **Custom Hardware Shells** — Swap between Noir, Kiwi, and Pure White hardware chassis themes.
 - **Display Palettes** — Choose between Original DMG, Pocket, and Light screen color palettes.
 - **TypeScript Game API** — Sprites, TileMaps, Entities, Input, Audio wrapper.
-- **Built-in Games** — Pong, Snake, Snake 2, Tetris, Bomberman, Platformer (all written purely in TypeScript).
+- **Built-in Games** — Play included classics like Snake, Snake 2, Tetris, Bomberman, Pong, Breakout, Space Invaders, Flappy Bird, and Platformer.
 - **Save States & Configs** — Persist game progress and user UI configurations to `localStorage` (with zero Next.js SSR hydration flashes).
 - **Keyboard + Touch** — Play smoothly on desktop or mobile.
 - **60 FPS Fixed Timestep** — Deterministic `requestAnimationFrame` game loop.
@@ -26,8 +26,8 @@ A **GameBoy-inspired game engine** built with Next.js 14, React 18, Tailwind CSS
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 14 (App Router) |
-| UI | React 18 (`useSyncExternalStore` for config) |
+| Framework | Next.js 16 (App Router) |
+| UI | React 19 (`useSyncExternalStore` for config) |
 | Styling | Tailwind CSS v4 (CSS-first theme) |
 | Language | TypeScript 5 (strict) |
 | Testing | Vitest (unit) + Playwright (E2E) |
@@ -71,21 +71,29 @@ src/
 │   │   ├── Renderer.ts     # Canvas 2D with DMG palette mappings
 │   │   ├── Input.ts        # Keyboard/Touch → GamePad state
 │   │   ├── Audio.ts        # Web Audio API wrapper (Beeps, Boops, Noise)
-│   │   └── SaveState.ts    # localStorage persistence
+│   │   ├── SaveState.ts    # localStorage persistence
+│   │   ├── BitmapFont.ts   # Custom retro font rendering
+│   │   └── EngineStateMachine.ts # Core boot/menu/play states
 │   │
 │   ├── api/
 │   │   ├── Game.ts         # Base Game class (init/update/draw)
 │   │   ├── Sprite.ts       # Sprite with position, animation
 │   │   ├── TileMap.ts      # Background tile maps
 │   │   ├── Entity.ts       # Game entities with components
-│   │   └── Sound.ts        # Sound effects / music
+│   │   ├── GamePad.ts      # Core gamepad definitions
+│   │   └── Sound.ts        # Sound effects / music wrappers
 │   │
 │   └── games/              # Built-in games
 │       ├── registry.ts     # Game registry & dynamic loading
-│       ├── snake2/         # Classic Snake 2
-│       ├── tetris/         # Tetris Clone
-│       ├── bomberman/      # Bomberman Clone
-│       └── platformer/     # Jump & Run
+│       ├── bomberman/
+│       ├── breakout/
+│       ├── flappy/
+│       ├── invaders/
+│       ├── platformer/
+│       ├── pong/
+│       ├── snake/
+│       ├── snake2/
+│       └── tetris/
 │
 ├── features/
 │   ├── ui/                 # React components
@@ -97,7 +105,8 @@ src/
 │
 ├── hooks/
 │   ├── useEngine.ts        # Engine lifecycle hook
-│   └── useLocalStorage.ts  # SSR-safe local storage hook
+│   ├── useLocalStorage.ts  # SSR-safe local storage hook
+│   └── useKeyboard.ts      # Physical keyboard listener
 │
 └── lib/
     ├── types.ts            # Shared TypeScript interfaces
