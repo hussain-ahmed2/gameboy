@@ -9,7 +9,7 @@ import { SaveState } from '@/engine/core';
 import { GAME_WIDTH, GAME_HEIGHT, HUD_HEIGHT } from '@/lib/constants';
 
 const COLS = 10;
-const ROWS = 20;
+const ROWS = 16;  // 16 rows × 8px = 128px = exactly fits GAME_HEIGHT(144) - HUD(16)
 const TILE = 8;
 const FIELD_X = 40;
 const FIELD_Y = 16;
@@ -84,13 +84,14 @@ const TETROMINOES: Record<TetrominoType, number[][]> = {
 
 const PIECE_TYPES: TetrominoType[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
 
+// Colors: 0 = background (invisible!), 1 = ghost, 2-3 = pieces
 const PIECE_COLORS: Record<TetrominoType, number> = {
-  I: 0,
-  O: 1,
-  T: 2,
-  S: 3,
-  Z: 2,
-  J: 1,
+  I: 3,
+  O: 2,
+  T: 3,
+  S: 2,
+  Z: 3,
+  J: 2,
   L: 3,
 };
 
@@ -198,6 +199,17 @@ export class TetrisGame extends Game {
   draw(renderer: Renderer): void {
     renderer.clear(0);
 
+    // Border outline (4 lines) drawn FIRST so pieces render on top
+    const bx = FIELD_X - 1;
+    const by = FIELD_Y - 1;
+    const bw = COLS * TILE + 2;
+    const bh = ROWS * TILE + 2;
+    renderer.drawRect(bx, by, bw, 1, 2);           // top
+    renderer.drawRect(bx, by + bh - 1, bw, 1, 2); // bottom
+    renderer.drawRect(bx, by, 1, bh, 2);           // left
+    renderer.drawRect(bx + bw - 1, by, 1, bh, 2); // right
+
+    // Locked field cells
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         if (this.field[y][x] !== 0) {
@@ -216,6 +228,7 @@ export class TetrisGame extends Game {
     if (this.current) {
       const ghostY = this.getGhostY();
       const shape = this.current.shape;
+      // Ghost piece (color 1 = lighter than active)
       for (let ry = 0; ry < shape.length; ry++) {
         for (let rx = 0; rx < shape[ry].length; rx++) {
           if (shape[ry][rx]) {
@@ -234,6 +247,7 @@ export class TetrisGame extends Game {
         }
       }
 
+      // Active piece
       const color = PIECE_COLORS[this.current.type] as 0 | 1 | 2 | 3;
       for (let ry = 0; ry < shape.length; ry++) {
         for (let rx = 0; rx < shape[ry].length; rx++) {
@@ -253,8 +267,6 @@ export class TetrisGame extends Game {
         }
       }
     }
-
-    renderer.drawRect(FIELD_X - 1, FIELD_Y - 1, COLS * TILE + 2, ROWS * TILE + 2, 2);
 
     // HUD separator
     renderer.drawRect(0, HUD_HEIGHT, GAME_WIDTH, 1, 2);
