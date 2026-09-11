@@ -154,6 +154,15 @@ export class MyGame extends Game {
 ### Touch (Mobile)
 Fully responsive on-screen D-pad and Action buttons designed to prevent ghost-touches and offer immediate feedback.
 
+## 🙏 Acknowledgments
+
+This project was built and accelerated using the incredible agentic AI capabilities of **OpenCode** and **Antigravity**. By leveraging these tools for rapid prototyping, complex refactoring (like SSR-safe persistence hooks), and automated testing, I was able to build this entire robust Next.js game engine in a fraction of the time.
+
+A huge thank you to the tools and communities that made this project possible:
+- **[Next.js](https://nextjs.org/) & [React](https://react.dev/)** for the powerful UI framework.
+- **[Tailwind CSS](https://tailwindcss.com/)** for the rapid, utility-first styling.
+- **Nintendo** for creating the original GameBoy that inspired a generation of developers. *(Note: This project is an independent educational tribute and is not affiliated with Nintendo).*
+
 ## 📝 License
 
 MIT
