@@ -11,9 +11,11 @@ import { EngineProvider, useEngineContext } from "@/features/store";
 import { GameBoyShell } from "@/features/ui/shell";
 import { Screen } from "@/features/ui/screen";
 import { DPad, ActionButtons, MetaButtons, TouchHandler } from "@/features/ui/controls";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 function GameBoyContent() {
-    const [shellEdition, setShellEdition] = useState<"noir" | "kiwi" | "white">("noir");
+    const [shellEdition, setShellEdition] = useLocalStorage<"noir" | "kiwi" | "white">("config_shellEdition", "noir");
+
     const {
         isRunning,
         isPaused,

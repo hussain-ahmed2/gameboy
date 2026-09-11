@@ -9,6 +9,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { GameLoop, Renderer, Input, Audio, EngineStateMachine, EngineState } from '@/engine';
 import { createGame, getAllGames, type GameInfo } from '@/engine/games';
 import { Game } from '@/engine/api/Game';
+import { useLocalStorage } from './use-local-storage';
 import type { GamePadState } from '@/lib/types';
 import type { GameOverInfo } from '@/engine/core/EngineStateMachine';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, type DisplayMode } from '@/lib/constants';
@@ -53,8 +54,8 @@ export function useEngine(): UseEngineReturn {
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null);
   const [engineState, setEngineState] = useState<EngineState>(EngineState.BOOT);
   const [gameOverInfo, setGameOverInfo] = useState<GameOverInfo | null>(null);
-  const [displayMode, setDisplayModeState] = useState<DisplayMode>('dmg');
-  const [isMuted, setIsMuted] = useState(false);
+  const [displayMode, setDisplayModeState] = useLocalStorage<DisplayMode>('config_displayMode', 'dmg');
+  const [isMuted, setIsMutedState] = useLocalStorage<boolean>('config_isMuted', false);
 
   const gameLoopRef = useRef<GameLoop | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -70,16 +71,25 @@ export function useEngine(): UseEngineReturn {
 
   const setDisplayMode = useCallback((mode: DisplayMode) => {
     setDisplayModeState(mode);
-    rendererRef.current?.setDisplayMode(mode);
-  }, []);
+  }, [setDisplayModeState]);
 
   const cycleDisplayMode = useCallback(() => {
     setDisplayModeState((prev) => {
-      const next: DisplayMode = prev === 'dmg' ? 'pocket' : prev === 'pocket' ? 'light' : 'dmg';
-      rendererRef.current?.setDisplayMode(next);
-      return next;
+      return prev === 'dmg' ? 'pocket' : prev === 'pocket' ? 'light' : 'dmg';
     });
-  }, []);
+  }, [setDisplayModeState]);
+
+  // Synchronize display mode with renderer
+  useEffect(() => {
+    rendererRef.current?.setDisplayMode(displayMode);
+  }, [displayMode]);
+
+  // Synchronize mute state with audio
+  useEffect(() => {
+    if (audioRef.current && audioRef.current.getMuted() !== isMuted) {
+      audioRef.current.setMuted(isMuted);
+    }
+  }, [isMuted]);
 
   useEffect(() => {
     const canvas = document.createElement('canvas');
@@ -344,13 +354,9 @@ export function useEngine(): UseEngineReturn {
   }, []);
 
   const toggleMute = useCallback(() => {
-    if (audioRef.current) {
-      const muted = audioRef.current.toggleMute();
-      setIsMuted(muted);
-      return muted;
-    }
-    return false;
-  }, []);
+    setIsMutedState(prev => !prev);
+    return !isMuted;
+  }, [isMuted, setIsMutedState]);
 
   const playClick = useCallback(() => {
     audioRef.current?.playClick();

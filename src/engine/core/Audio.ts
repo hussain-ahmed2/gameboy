@@ -56,6 +56,15 @@ export class Audio {
     return this.isMuted;
   }
 
+  /** Set mute state explicitly */
+  setMuted(muted: boolean): void {
+    this.ensureContext();
+    this.isMuted = muted;
+    if (this.masterGain) {
+      this.masterGain.gain.value = this.isMuted ? 0 : this.savedVolume;
+    }
+  }
+
   /** Get mute state */
   getMuted(): boolean {
     return this.isMuted;
