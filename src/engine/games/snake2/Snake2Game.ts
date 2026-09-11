@@ -13,8 +13,8 @@ const GRID_WIDTH = GAME_WIDTH / GRID_SIZE; // 20
 const GRID_HEIGHT = GAME_HEIGHT / GRID_SIZE; // 18
 const HUD_GRID_Y = Math.ceil(HUD_HEIGHT / GRID_SIZE); // 2 rows for HUD
 const PLAY_TOP = HUD_GRID_Y;
-const BASE_SPEED = 150;
-const MIN_SPEED = 60;
+const BASE_SPEED = 250;
+const MIN_SPEED = 90;
 
 const HIGHSCORE_KEY = 'snake2_highscore';
 
@@ -69,6 +69,7 @@ export class Snake2Game extends Game {
   private obstacles: { x: number; y: number }[] = [];
   private obstacleThresholdsHit: number[] = [];
   private animTimer = 0;
+  private readyTimer = 0;
 
   init(): void {
     const saved = SaveState.load(HIGHSCORE_KEY);
@@ -92,12 +93,23 @@ export class Snake2Game extends Game {
     this.obstacles = [];
     this.obstacleThresholdsHit = [];
     this.animTimer = 0;
+    this.readyTimer = 2.0; // 2s start freeze
 
     this.spawnFood();
   }
 
   update(input: GamePadState, deltaTime: number): void {
     if (this._gameOver) return;
+
+    if (this.readyTimer > 0) {
+      this.readyTimer -= deltaTime;
+      // Allow pre-turning while frozen
+      if (input.up && this.direction.y !== 1) this.nextDirection = { x: 0, y: -1 };
+      else if (input.down && this.direction.y !== -1) this.nextDirection = { x: 0, y: 1 };
+      else if (input.left && this.direction.x !== 1) this.nextDirection = { x: -1, y: 0 };
+      else if (input.right && this.direction.x !== -1) this.nextDirection = { x: 1, y: 0 };
+      return;
+    }
 
     if (input.up && this.direction.y !== 1) {
       this.nextDirection = { x: 0, y: -1 };
@@ -134,11 +146,12 @@ export class Snake2Game extends Game {
       y: head.y + this.direction.y,
     };
 
-    // Boundary collision (including HUD boundary at top)
-    if (newHead.x < 0 || newHead.x >= GRID_WIDTH || newHead.y < PLAY_TOP || newHead.y >= GRID_HEIGHT) {
-      this.endGame();
-      return;
-    }
+    // Boundary wrapping (Classic Snake II behavior)
+    if (newHead.x < 0) newHead.x = GRID_WIDTH - 1;
+    else if (newHead.x >= GRID_WIDTH) newHead.x = 0;
+    
+    if (newHead.y < PLAY_TOP) newHead.y = GRID_HEIGHT - 1;
+    else if (newHead.y >= GRID_HEIGHT) newHead.y = PLAY_TOP;
 
     // Obstacle collision
     if (this.obstacles.some(o => o.x === newHead.x && o.y === newHead.y)) {
@@ -210,7 +223,7 @@ export class Snake2Game extends Game {
   }
 
   private updateSpeed(): void {
-    this.moveInterval = Math.max(MIN_SPEED, BASE_SPEED - this._score * 3);
+    this.moveInterval = Math.max(MIN_SPEED, BASE_SPEED * Math.pow(0.97, this._score));
   }
 
   private checkObstacles(): void {
@@ -330,6 +343,11 @@ export class Snake2Game extends Game {
     // HUD
     renderer.drawText(`SCORE:${this._score}`, 4, 4, 3);
     renderer.drawText(`HIGH:${this.highScore}`, 90, 4, 2);
+
+    // Get-ready overlay
+    if (this.readyTimer > 0) {
+      renderer.drawTextCentered('GET READY', GAME_HEIGHT / 2 - 4, 3);
+    }
   }
 
   getScore(): number {
