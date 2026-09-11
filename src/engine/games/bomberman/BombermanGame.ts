@@ -128,17 +128,22 @@ export class BombermanGame extends Game {
     for (let gy = 0; gy < ROWS; gy++) {
       this.grid[gy] = [];
       for (let gx = 0; gx < COLS; gx++) {
-        if (gx % 2 === 1 && gy % 2 === 1) {
-          this.grid[gy][gx] = Cell.Wall;
+        if (gx === 0 || gx === COLS - 1 || gy === 0 || gy === ROWS - 1) {
+          this.grid[gy][gx] = Cell.Wall; // indestructible perimeter
+        } else if (gx % 2 === 0 && gy % 2 === 0) {
+          this.grid[gy][gx] = Cell.Wall; // interior pillar (classic Bomberman pattern)
+        } else if (Math.random() < 0.7) {
+          this.grid[gy][gx] = Cell.Block; // 70% of remaining cells have destructible blocks
         } else {
-          this.grid[gy][gx] = Cell.Block;
+          this.grid[gy][gx] = Cell.Empty; // 30% empty — gives enemies room to roam
         }
       }
     }
 
-    this.grid[0][0] = Cell.Empty;
-    this.grid[0][1] = Cell.Empty;
-    this.grid[1][0] = Cell.Empty;
+    // Guarantee safe start area around player spawn (1,1)
+    this.grid[1][1] = Cell.Empty;
+    this.grid[1][2] = Cell.Empty;
+    this.grid[2][1] = Cell.Empty;
 
     const destroyableCells: { gx: number; gy: number }[] = [];
     for (let gy = 0; gy < ROWS; gy++) {
@@ -152,7 +157,7 @@ export class BombermanGame extends Game {
     const exitIdx = Math.floor(Math.random() * destroyableCells.length);
     this.exitGx = destroyableCells[exitIdx].gx;
     this.exitGy = destroyableCells[exitIdx].gy;
-    this.grid[this.exitGy][this.exitGx] = Cell.Exit;
+    // Leave exit as Cell.Block — it's revealed when that block is destroyed
     this.exitRevealed = false;
 
     for (let i = destroyableCells.length - 1; i > 0; i--) {
@@ -173,12 +178,12 @@ export class BombermanGame extends Game {
       }
     }
 
-    this.playerGx = 0;
-    this.playerGy = 0;
-    this.playerPx = GRID_OFFSET_X;
-    this.playerPy = GRID_OFFSET_Y;
-    this.targetPx = GRID_OFFSET_X;
-    this.targetPy = GRID_OFFSET_Y;
+    this.playerGx = 1;
+    this.playerGy = 1;
+    this.playerPx = GRID_OFFSET_X + TILE; // pixel position at grid (1,1)
+    this.playerPy = GRID_OFFSET_Y + TILE;
+    this.targetPx = this.playerPx;
+    this.targetPy = this.playerPy;
     this.moving = false;
 
     this.bombs = [];
@@ -195,10 +200,12 @@ export class BombermanGame extends Game {
         ex = Math.floor(Math.random() * COLS);
         ey = Math.floor(Math.random() * ROWS);
         attempts++;
-      } while (attempts < 100 && (
+        // Spawn in empty cells, away from player start corner (1,1)
+      } while (attempts < 200 && (
         this.grid[ey][ex] !== Cell.Empty ||
-        (ex <= 2 && ey <= 2)
+        (ex <= 3 && ey <= 3)
       ));
+      if (this.grid[ey][ex] !== Cell.Empty) continue; // skip if no valid cell found
       this.enemies.push({
         gx: ex,
         gy: ey,
@@ -216,6 +223,10 @@ export class BombermanGame extends Game {
   update(input: GamePadState, deltaTime: number): void {
     if (this._gameOver || this._gameWon) {
       this.gameOverTimer += deltaTime;
+      // Allow restart after 1 second
+      if (this.gameOverTimer > 1.0 && input.a) {
+        this.init();
+      }
       return;
     }
 
@@ -249,6 +260,7 @@ export class BombermanGame extends Game {
 
     this.checkEnemyCollision();
     this.checkExplosionCollision();
+    this.checkPowerUps();
     this.checkExitReached();
   }
 
@@ -344,11 +356,16 @@ export class BombermanGame extends Game {
         if (cell === Cell.Block) {
           this.grid[gy][gx] = Cell.Empty;
           this._score += 10;
+          // If this was the hidden exit, reveal it
+          if (gx === this.exitGx && gy === this.exitGy) {
+            this.grid[gy][gx] = Cell.Exit;
+            this.exitRevealed = true;
+          }
           break;
         }
 
         if (cell === Cell.Exit) {
-          break;
+          break; // fire doesn't pass through exit
         }
       }
     }
@@ -367,16 +384,14 @@ export class BombermanGame extends Game {
       }
     }
 
-    if (!this.moving) {
-      for (const c of cells) {
-        if (c.gx === this.playerGx && c.gy === this.playerGy) {
-          this.damagePlayer();
-          break;
-        }
+    // Player always takes damage if standing on an explosion cell (movement doesn't grant immunity)
+    for (const c of cells) {
+      if (c.gx === this.playerGx && c.gy === this.playerGy) {
+        this.damagePlayer();
+        break;
       }
     }
 
-    this.revealExit();
     this.bombCooldowns.delete(`${bomb.gx},${bomb.gy}`);
   }
 
@@ -429,42 +444,26 @@ export class BombermanGame extends Game {
     }
   }
 
+  private checkPowerUps(): void {
+    for (let i = this.powerUps.length - 1; i >= 0; i--) {
+      const pu = this.powerUps[i];
+      // Power-up is only collectible once its block has been blown up
+      if (this.grid[pu.gy][pu.gx] === Cell.Block) continue;
+      if (pu.gx === this.playerGx && pu.gy === this.playerGy) {
+        this.powerUps.splice(i, 1);
+        switch (pu.type) {
+          case 'bomb':  this.maxBombs  = Math.min(this.maxBombs  + 1, 5); break;
+          case 'fire':  this.fireRange = Math.min(this.fireRange + 1, 7); break;
+          case 'speed': this.speedLevel= Math.min(this.speedLevel+ 1, 4); break;
+        }
+        this.audio.coin();
+      }
+    }
+  }
+
   private revealExit(): void {
-    if (this.exitRevealed) return;
-    const cell = this.grid[this.exitGy][this.exitGx];
-    if (cell === Cell.Block) return;
-
-    let hasBlockInPath = false;
-    const dx = this.exitGx - this.playerGx;
-    const dy = this.exitGy - this.playerGy;
-    const adx = Math.abs(dx);
-    const ady = Math.abs(dy);
-
-    if (adx >= ady) {
-      const stepX = dx > 0 ? 1 : -1;
-      for (let i = 1; i <= adx; i++) {
-        const checkX = this.playerGx + stepX * i;
-        if (checkX < 0 || checkX >= COLS) break;
-        if (this.grid[this.playerGy][checkX] === Cell.Block) {
-          hasBlockInPath = true;
-          break;
-        }
-      }
-    } else {
-      const stepY = dy > 0 ? 1 : -1;
-      for (let i = 1; i <= ady; i++) {
-        const checkY = this.playerGy + stepY * i;
-        if (checkY < 0 || checkY >= ROWS) break;
-        if (this.grid[checkY][this.playerGx] === Cell.Block) {
-          hasBlockInPath = true;
-          break;
-        }
-      }
-    }
-
-    if (!hasBlockInPath) {
-      this.exitRevealed = true;
-    }
+    // Exit is now revealed by explodeBomb() when the exit block is destroyed.
+    // This method is kept as a no-op for backwards-compat with any future calls.
   }
 
   private checkExitReached(): void {
@@ -502,19 +501,21 @@ export class BombermanGame extends Game {
           e.gx = newGx;
           e.gy = newGy;
         } else {
-          const choices: { x: number; y: number }[] = [];
-          if (e.dir.x !== 0) {
-            choices.push({ x: 0, y: -1 });
-            choices.push({ x: 0, y: 1 });
+          // Pick a valid passable direction — filter all 4 dirs by walkability
+          const allDirs = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }];
+          const valid = allDirs.filter(d => {
+            const nx = e.gx + d.x;
+            const ny = e.gy + d.y;
+            return nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS &&
+              this.grid[ny][nx] !== Cell.Wall &&
+              this.grid[ny][nx] !== Cell.Block;
+          });
+          if (valid.length > 0) {
+            // Prefer not to reverse direction unless that's the only option
+            const nonReverse = valid.filter(d => !(d.x === -e.dir.x && d.y === -e.dir.y));
+            const choices = nonReverse.length > 0 ? nonReverse : valid;
+            e.dir = choices[Math.floor(Math.random() * choices.length)];
           }
-          if (e.dir.y !== 0) {
-            choices.push({ x: -1, y: 0 });
-            choices.push({ x: 1, y: 0 });
-          }
-          if (choices.length === 0) {
-            choices.push({ x: -e.dir.x, y: 0 }, { x: 0, y: -e.dir.y });
-          }
-          e.dir = choices[Math.floor(Math.random() * choices.length)];
         }
       }
 
@@ -591,6 +592,22 @@ export class BombermanGame extends Game {
 
     for (let i = 0; i < this._lives; i++) {
       renderer.drawRect(GAME_WIDTH - 8 - i * 8, 4, 5, 5, 3);
+    }
+
+    // Game Over overlay
+    if (this._gameOver) {
+      renderer.drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT, 0);
+      renderer.drawTextCentered('GAME OVER', GAME_HEIGHT / 2 - 8, 3);
+      renderer.drawTextCentered(`SCORE:${this._score}`, GAME_HEIGHT / 2 + 8, 2);
+      renderer.drawTextCentered('PRESS A', GAME_HEIGHT / 2 + 24, 2);
+    }
+
+    // Win overlay
+    if (this._gameWon) {
+      renderer.drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT, 0);
+      renderer.drawTextCentered('YOU WIN!', GAME_HEIGHT / 2 - 8, 3);
+      renderer.drawTextCentered(`SCORE:${this._score}`, GAME_HEIGHT / 2 + 8, 2);
+      renderer.drawTextCentered('PRESS A', GAME_HEIGHT / 2 + 24, 2);
     }
   }
 
