@@ -20,19 +20,20 @@ interface HomeButtonProps {
 
 export function HomeButton({ onPress, isPaused = false, className }: HomeButtonProps) {
   const touchActive = useRef(false);
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (e.cancelable) e.preventDefault();
-      touchActive.current = true;
-      onPress();
-    },
-    [onPress]
-  );
+  const handleTouchStart = useCallback(() => {
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    touchActive.current = true;
+    onPress();
+  }, [onPress]);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (e.cancelable) e.preventDefault();
-    touchActive.current = false;
+  const handleTouchEnd = useCallback(() => {
+    // Keep touchActive true for 500ms to absorb synthetic mouse events from browser
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    touchTimerRef.current = setTimeout(() => {
+      touchActive.current = false;
+    }, 500);
   }, []);
 
   const handleClick = useCallback(

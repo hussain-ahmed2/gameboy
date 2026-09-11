@@ -22,21 +22,13 @@ export function useTouch(
     callbackRef.current = onButtonChange;
   }, [onButtonChange]);
 
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      e.preventDefault();
-      callbackRef.current(button, true);
-    },
-    [button]
-  );
+  const handleTouchStart = useCallback(() => {
+    callbackRef.current(button, true);
+  }, [button]);
 
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      e.preventDefault();
-      callbackRef.current(button, false);
-    },
-    [button]
-  );
+  const handleTouchEnd = useCallback(() => {
+    callbackRef.current(button, false);
+  }, [button]);
 
   return { handleTouchStart, handleTouchEnd };
 }

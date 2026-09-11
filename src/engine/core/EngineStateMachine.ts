@@ -58,6 +58,7 @@ export class EngineStateMachine {
   private gameOverIndex: number = 0;
   private bootTimer: number = 0;
   private menuScrollOffset: number = 0;
+  private menuNavCooldown: number = 0;
   private readonly bootDuration: number = 2.0;
 
   /** Stored game framebuffer for overlay states */
@@ -101,18 +102,18 @@ export class EngineStateMachine {
         this.updateBoot(deltaTime);
         break;
       case EngineState.MENU:
-        this.updateMenu(input);
+        this.updateMenu(input, deltaTime);
         break;
       case EngineState.GAME_SELECT:
-        this.updateGameSelect(input);
+        this.updateGameSelect(input, deltaTime);
         break;
       case EngineState.PLAYING:
         break;
       case EngineState.PAUSED:
-        this.updatePause(input);
+        this.updatePause(input, deltaTime);
         break;
       case EngineState.GAME_OVER:
-        this.updateGameOver(input);
+        this.updateGameOver(input, deltaTime);
         break;
     }
   }
@@ -141,6 +142,7 @@ export class EngineStateMachine {
   }
 
   private enterState(state: EngineState): void {
+    this.menuNavCooldown = 0.1;
     switch (state) {
       case EngineState.BOOT:
         this.bootTimer = 0;
@@ -170,16 +172,24 @@ export class EngineStateMachine {
     }
   }
 
-  private updateMenu(input: Input): void {
+  private updateMenu(input: Input, deltaTime: number): void {
     const games = this.context.games;
     if (games.length === 0) return;
 
-    if (input.isJustPressed('up')) {
-      this.menuIndex = (this.menuIndex - 1 + games.length) % games.length;
+    if (this.menuNavCooldown > 0) {
+      this.menuNavCooldown -= deltaTime;
     }
-    if (input.isJustPressed('down') || input.isJustPressed('select')) {
-      this.menuIndex = (this.menuIndex + 1) % games.length;
+
+    if (this.menuNavCooldown <= 0) {
+      if (input.isJustPressed('up')) {
+        this.menuIndex = (this.menuIndex - 1 + games.length) % games.length;
+        this.menuNavCooldown = 0.15;
+      } else if (input.isJustPressed('down') || input.isJustPressed('select')) {
+        this.menuIndex = (this.menuIndex + 1) % games.length;
+        this.menuNavCooldown = 0.15;
+      }
     }
+
     if (this.menuIndex >= games.length) {
       this.menuIndex = games.length - 1;
     }
@@ -205,14 +215,21 @@ export class EngineStateMachine {
     }
   }
 
-  private updateGameSelect(input: Input): void {
+  private updateGameSelect(input: Input, deltaTime: number): void {
     const opts = ['CONTINUE', 'NEW GAME', 'BACK'];
 
-    if (input.isJustPressed('up')) {
-      this.gameSelectIndex = (this.gameSelectIndex + 2) % 3;
+    if (this.menuNavCooldown > 0) {
+      this.menuNavCooldown -= deltaTime;
     }
-    if (input.isJustPressed('down') || input.isJustPressed('select')) {
-      this.gameSelectIndex = (this.gameSelectIndex + 1) % 3;
+
+    if (this.menuNavCooldown <= 0) {
+      if (input.isJustPressed('up')) {
+        this.gameSelectIndex = (this.gameSelectIndex + 2) % 3;
+        this.menuNavCooldown = 0.15;
+      } else if (input.isJustPressed('down') || input.isJustPressed('select')) {
+        this.gameSelectIndex = (this.gameSelectIndex + 1) % 3;
+        this.menuNavCooldown = 0.15;
+      }
     }
 
     if (input.isJustPressed('a') || input.isJustPressed('start')) {
@@ -228,12 +245,19 @@ export class EngineStateMachine {
     }
   }
 
-  private updatePause(input: Input): void {
-    if (input.isJustPressed('up')) {
-      this.pauseIndex = (this.pauseIndex + 2) % 3;
+  private updatePause(input: Input, deltaTime: number): void {
+    if (this.menuNavCooldown > 0) {
+      this.menuNavCooldown -= deltaTime;
     }
-    if (input.isJustPressed('down') || input.isJustPressed('select')) {
-      this.pauseIndex = (this.pauseIndex + 1) % 3;
+
+    if (this.menuNavCooldown <= 0) {
+      if (input.isJustPressed('up')) {
+        this.pauseIndex = (this.pauseIndex + 2) % 3;
+        this.menuNavCooldown = 0.15;
+      } else if (input.isJustPressed('down') || input.isJustPressed('select')) {
+        this.pauseIndex = (this.pauseIndex + 1) % 3;
+        this.menuNavCooldown = 0.15;
+      }
     }
 
     if (input.isJustPressed('a')) {
@@ -257,12 +281,19 @@ export class EngineStateMachine {
     }
   }
 
-  private updateGameOver(input: Input): void {
-    if (input.isJustPressed('up')) {
-      this.gameOverIndex = (this.gameOverIndex + 2) % 3;
+  private updateGameOver(input: Input, deltaTime: number): void {
+    if (this.menuNavCooldown > 0) {
+      this.menuNavCooldown -= deltaTime;
     }
-    if (input.isJustPressed('down') || input.isJustPressed('select')) {
-      this.gameOverIndex = (this.gameOverIndex + 1) % 3;
+
+    if (this.menuNavCooldown <= 0) {
+      if (input.isJustPressed('up')) {
+        this.gameOverIndex = (this.gameOverIndex + 2) % 3;
+        this.menuNavCooldown = 0.15;
+      } else if (input.isJustPressed('down') || input.isJustPressed('select')) {
+        this.gameOverIndex = (this.gameOverIndex + 1) % 3;
+        this.menuNavCooldown = 0.15;
+      }
     }
 
     if (input.isJustPressed('a')) {

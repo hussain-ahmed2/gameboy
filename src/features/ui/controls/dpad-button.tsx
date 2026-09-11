@@ -20,6 +20,7 @@ interface DPadButtonProps {
 
 export function DPadButton({ direction, onButtonChange, className }: DPadButtonProps) {
   const touchActive = useRef(false);
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handlePress = useCallback(() => {
     onButtonChange(direction, true);
@@ -29,16 +30,19 @@ export function DPadButton({ direction, onButtonChange, className }: DPadButtonP
     onButtonChange(direction, false);
   }, [direction, onButtonChange]);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.cancelable) e.preventDefault();
+  const handleTouchStart = useCallback(() => {
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
     touchActive.current = true;
     handlePress();
   }, [handlePress]);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (e.cancelable) e.preventDefault();
-    touchActive.current = false;
+  const handleTouchEnd = useCallback(() => {
     handleRelease();
+    // Keep touchActive true for 500ms to absorb synthetic mouse events from browser
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    touchTimerRef.current = setTimeout(() => {
+      touchActive.current = false;
+    }, 500);
   }, [handleRelease]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {

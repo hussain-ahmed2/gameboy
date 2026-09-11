@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useCallback, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 interface TouchHandlerProps {
@@ -17,18 +17,8 @@ interface TouchHandlerProps {
 }
 
 export function TouchHandler({ children, className }: TouchHandlerProps) {
-  const preventScroll = useCallback((e: React.TouchEvent) => {
-    if (e.cancelable) {
-      e.preventDefault();
-    }
-  }, []);
-
   return (
-    <div
-      className={cn('touch-none', className)}
-      onTouchMove={preventScroll}
-      onTouchStart={preventScroll}
-    >
+    <div className={cn('touch-none', className)}>
       {children}
     </div>
   );
