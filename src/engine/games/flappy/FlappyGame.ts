@@ -263,13 +263,13 @@ export class FlappyGame extends Game {
       renderer.drawRect(bx + 6, by + 3, 2, 1, 2); // upper beak plate (2px wide)
       renderer.drawRect(bx + 6, by + 4, 1, 1, 2); // lower beak tip  (1px = point)
 
-      // ── Wing (color 1, animates up when flapping / down when falling) ──
+      // ── Wing (color 1, animates up when flapping / tucked mid-body when falling) ──
       if (flapping) {
         // Wing raised — drawn above body
         renderer.drawRect(bx + 2, by,     3, 1, 1);
       } else {
-        // Wing tucked — drawn at base of body
-        renderer.drawRect(bx + 2, by + 6, 3, 1, 1);
+        // Wing tucked inside body (mid-section) — avoids overwriting the bottom arc
+        renderer.drawRect(bx + 2, by + 4, 3, 1, 1);
       }
     }
 
