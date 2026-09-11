@@ -25,10 +25,10 @@ export function ShellLabel({ isRunning = false, isPaused = false }: ShellLabelPr
               ? "bg-emerald-400 shadow-[0_0_6px_#10b981]"
               : isPaused
                 ? "bg-amber-400 shadow-[0_0_6px_#fbbf24]"
-                : "bg-white/20",
+                : "bg-shell-text-dim/30",
           )}
         />
-        <p className="font-sans font-bold text-[8px] tracking-[0.14em] text-white/40 uppercase">
+        <p className="font-sans font-bold text-[8px] tracking-[0.14em] text-shell-text-dim uppercase">
           DOT MATRIX WITH STEREO SOUND
         </p>
       </div>

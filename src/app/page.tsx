@@ -35,11 +35,25 @@ function GameBoyContent() {
     }, [togglePause, cycleDisplayMode]);
 
     return (
-        <main className="min-h-screen bg-bg flex flex-col items-center justify-center p-4 selection:bg-white/10">
+        <main
+            data-shell-edition={shellEdition}
+            className="min-h-screen relative flex flex-col items-center justify-center p-4 selection:bg-white/10 transition-colors duration-500 overflow-hidden"
+            style={{
+                background: "var(--bg-gradient, var(--bg))",
+            }}
+        >
+            {/* Soft Ambient Studio Lighting Halo behind Console */}
+            <div
+                className="pointer-events-none absolute w-[460px] h-[640px] max-w-full rounded-full blur-3xl opacity-75 transition-all duration-700 -z-10"
+                style={{
+                    background: "var(--ambient-halo)",
+                }}
+            />
+
             {/* Centered Settings: Shell Colors & Screen Display Palette */}
             <div className="flex items-center justify-center gap-2.5 mb-3 select-none">
                 {/* Shell Edition Swatches */}
-                <div className="flex items-center bg-white/5 rounded-full p-1 border border-white/10 shadow-sm gap-1.5">
+                <div className="flex items-center bg-white/5 backdrop-blur-sm rounded-full p-1 border border-white/10 shadow-sm gap-1.5">
                     <button
                         onClick={() => setShellEdition("noir")}
                         title="Noir Black Shell"
@@ -56,7 +70,7 @@ function GameBoyContent() {
                         aria-label="Kiwi Green Shell"
                         className={`w-5 h-5 rounded-full bg-[#7ee647] border transition-all cursor-pointer ${
                             shellEdition === "kiwi"
-                                ? "border-white scale-110 shadow-sm ring-1 ring-white/50"
+                                ? "border-emerald-400 scale-110 shadow-sm ring-1 ring-emerald-400/50"
                                 : "border-white/20 opacity-60 hover:opacity-100"
                         }`}
                     />

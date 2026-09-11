@@ -88,7 +88,10 @@ export function DPadButton({ direction, onButtonChange, className }: DPadButtonP
         height="11"
         viewBox="0 0 24 24"
         fill="currentColor"
-        className="text-white/75 group-hover:text-white transition-colors duration-150 drop-shadow-[0_1px_1px_rgba(0,0,0,0.85)]"
+        className="text-shell-ink group-hover:brightness-110 transition-all duration-150"
+        style={{
+          filter: "drop-shadow(var(--shell-ink-shadow))",
+        }}
       >
         {direction === "Up" && <path d="M12 5l-7 8h14l-7-8z" />}
         {direction === "Down" && <path d="M12 19l7-8H5l7 8z" />}

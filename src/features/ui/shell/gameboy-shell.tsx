@@ -35,11 +35,13 @@ export function GameBoyShell({
             className={cn(
                 "relative flex flex-col",
                 "bg-shell rounded-[8px] p-5 pb-6",
-                "border border-white/10",
-                "shadow-[0_25px_65px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)]",
+                "border border-shell-border",
                 "w-[400px] max-w-full transition-all duration-300",
                 className,
             )}
+            style={{
+                boxShadow: "var(--shell-shadow)",
+            }}
         >
             {/* Screen area (Edge-to-edge dark glass panel) */}
             <div className="relative">{children}</div>

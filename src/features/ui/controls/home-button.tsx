@@ -51,7 +51,7 @@ export function HomeButton({ onPress, isPaused = false, className }: HomeButtonP
         className={cn(
           "relative w-9 h-9 rounded-full flex items-center justify-center",
           // Recessed shadow well in the chassis
-          "bg-black/45 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_1px_1px_rgba(255,255,255,0.08)]",
+          "bg-shell-well shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_1px_1px_var(--shell-well-rim)]",
           className,
         )}
       >
@@ -65,13 +65,14 @@ export function HomeButton({ onPress, isPaused = false, className }: HomeButtonP
           className={cn(
             "w-7 h-7 rounded-full",
             "bg-btn-meta hover:brightness-110 active:brightness-75",
-            // Tactile button top sheen and bottom drop shadow
-            "shadow-[0_2px_5px_rgba(0,0,0,0.75),inset_0_1.5px_1px_rgba(255,255,255,0.25)]",
             "active:scale-95 active:shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.8)]",
             "transition-all duration-150 select-none touch-none",
             "flex items-center justify-center group cursor-pointer",
             isPaused && "ring-1 ring-emerald-400/70 shadow-[0_0_8px_rgba(16,185,129,0.3)]",
           )}
+          style={{
+            boxShadow: "var(--shell-btn-shadow)",
+          }}
         >
           {/* Precision Debossed Geometric Icon */}
           <svg
@@ -82,10 +83,10 @@ export function HomeButton({ onPress, isPaused = false, className }: HomeButtonP
               "transition-colors duration-150",
               isPaused
                 ? "text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.8)]"
-                : "text-white/60 group-hover:text-white/90",
+                : "text-shell-ink/75 group-hover:text-shell-ink",
             )}
             style={{
-              filter: "drop-shadow(0 1px 0 rgba(255, 255, 255, 0.15)) drop-shadow(0 -1px 0.5px rgba(0, 0, 0, 0.7))",
+              filter: "drop-shadow(0 1px 0 var(--shell-well-rim)) drop-shadow(0 -1px 0.5px rgba(0, 0, 0, 0.5))",
             }}
           >
             {/* Lower-left circle */}
@@ -103,7 +104,7 @@ export function HomeButton({ onPress, isPaused = false, className }: HomeButtonP
           </svg>
         </button>
       </div>
-      <span className="font-sans font-bold text-[9px] tracking-wider text-white/70 mt-1 uppercase select-none">
+      <span className="font-sans font-bold text-[9px] tracking-wider text-shell-text mt-1 uppercase select-none">
         Menu
       </span>
     </div>

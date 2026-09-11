@@ -19,8 +19,8 @@ export function ScreenBezel({ children, className }: ScreenBezelProps) {
             data-testid="screen-bezel"
             className={cn(
                 "relative bg-[#070709] rounded-[4px] p-3",
-                "border border-white/10",
-                "shadow-[inset_0_1px_1px_rgba(255,255,255,0.18),0_8px_24px_rgba(0,0,0,0.7)]",
+                "border border-black/60 ring-1 ring-white/10",
+                "shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_1px_2px_rgba(0,0,0,0.35)]",
                 "aspect-[10/9] overflow-hidden flex flex-col justify-center",
                 className,
             )}

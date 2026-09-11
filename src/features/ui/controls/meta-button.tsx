@@ -65,7 +65,7 @@ export function MetaButton({ label, onButtonChange, className }: MetaButtonProps
         className={cn(
           "relative w-9 h-9 rounded-full flex items-center justify-center",
           // Recessed shadow well in the chassis
-          "bg-black/45 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_1px_1px_rgba(255,255,255,0.08)]",
+          "bg-shell-well shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_1px_1px_var(--shell-well-rim)]",
           className,
         )}
       >
@@ -75,12 +75,13 @@ export function MetaButton({ label, onButtonChange, className }: MetaButtonProps
           className={cn(
             "w-7 h-7 rounded-full",
             "bg-btn-meta hover:brightness-110 active:brightness-75",
-            // Tactile cylindrical dome depth
-            "shadow-[0_2px_5px_rgba(0,0,0,0.75),inset_0_1.5px_1px_rgba(255,255,255,0.25)]",
             "active:scale-95 active:shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.8)]",
             "transition-all duration-150 select-none touch-none",
             "flex items-center justify-center cursor-pointer",
           )}
+          style={{
+            boxShadow: "var(--shell-btn-shadow)",
+          }}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
@@ -89,7 +90,7 @@ export function MetaButton({ label, onButtonChange, className }: MetaButtonProps
           aria-label={`${label} button`}
         />
       </div>
-      <span className="font-sans font-bold text-[9px] tracking-wider text-white/70 mt-1 uppercase select-none">
+      <span className="font-sans font-bold text-[9px] tracking-wider text-shell-text mt-1 uppercase select-none">
         {label}
       </span>
     </div>

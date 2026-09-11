@@ -5,7 +5,13 @@
   --shell: #161619;
   --shell-dark: #0e0e11;
   --shell-border: #26262d;
-  --shell-text: rgba(255, 255, 255, 0.4);
+  --shell-text: rgba(255, 255, 255, 0.75);
+  --shell-text-dim: rgba(255, 255, 255, 0.45);
+  --shell-ink: rgba(255, 255, 255, 0.88);
+  --shell-ink-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+  --shell-well: rgba(0, 0, 0, 0.45);
+  --shell-well-rim: rgba(255, 255, 255, 0.08);
+  --shell-btn-shadow: 0 2px 5px rgba(0, 0, 0, 0.75), inset 0 1.5px 1px rgba(255, 255, 255, 0.25);
   --shell-accent: #38bdf8;
   --bezel: #08080a;
   --lcd-light: #9bbc0f;
@@ -19,42 +25,70 @@
   --dpad: #222329;
   --dpad-hover: #2f3039;
   --led: #10b981;
-  --bg: #09090c;
+  --bg: #090a0f;
+  --bg-gradient: radial-gradient(circle at 50% 45%, #151822 0%, #08090d 75%);
+  --ambient-halo: rgba(45, 60, 90, 0.35);
+  --shell-shadow: 0 30px 75px -15px rgba(0, 0, 0, 0.95), 0 12px 30px -10px rgba(0, 0, 0, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   --accent: #38bdf8;
   --accent-glow: rgba(56, 189, 248, 0.4);
 }
 
-/* Kiwi Green Edition (Reference Image 1) */
+/* Kiwi Green Edition */
 [data-shell-edition="kiwi"] {
   --shell: #7ee647;
   --shell-dark: #58ab30;
   --shell-border: #6cd13b;
-  --shell-text: rgba(22, 60, 10, 0.55);
-  --btn-ab: #70d83a;
-  --btn-ab-hover: #83ed4b;
+  --shell-text: #193d0c;
+  --shell-text-dim: rgba(25, 61, 12, 0.70);
+  --shell-ink: #133408;
+  --shell-ink-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  --shell-well: rgba(18, 48, 8, 0.35);
+  --shell-well-rim: rgba(255, 255, 255, 0.28);
+  --shell-btn-shadow: 0 3px 6px rgba(18, 45, 9, 0.45), inset 0 1.5px 1.5px rgba(255, 255, 255, 0.45);
+  --btn-ab: #6fd339;
+  --btn-ab-hover: #7fe645;
   --btn-meta: #67c736;
   --btn-meta-hover: #7ae045;
-  --dpad: #70d83a;
-  --dpad-hover: #83ed4b;
+  --dpad: #6fd339;
+  --dpad-hover: #7fe645;
+  --bg: #0a1309;
+  --bg-gradient: radial-gradient(circle at 50% 45%, #142411 0%, #091108 75%);
+  --ambient-halo: rgba(126, 230, 71, 0.22);
+  --shell-shadow: 0 30px 75px -15px rgba(0, 0, 0, 0.95), 0 15px 35px -10px rgba(8, 20, 7, 0.85), 0 0 70px rgba(126, 230, 71, 0.16), inset 0 1px 1.5px rgba(255, 255, 255, 0.45);
 }
 
-/* Pure White Edition (Reference Image 3) */
+/* Pure White Edition */
 [data-shell-edition="white"] {
   --shell: #f0f2f5;
   --shell-dark: #d2d5dc;
   --shell-border: #e0e3e8;
-  --shell-text: rgba(40, 44, 52, 0.45);
-  --btn-ab: #e4e7ed;
-  --btn-ab-hover: #ffffff;
-  --btn-meta: #dcdee4;
-  --btn-meta-hover: #eceef4;
-  --dpad: #e4e7ed;
-  --dpad-hover: #ffffff;
+  --shell-text: #2c303a;
+  --shell-text-dim: rgba(44, 48, 58, 0.65);
+  --shell-ink: #20232b;
+  --shell-ink-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+  --shell-well: rgba(0, 0, 0, 0.10);
+  --shell-well-rim: rgba(255, 255, 255, 0.8);
+  --shell-btn-shadow: 0 3px 7px rgba(0, 0, 0, 0.22), inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95);
+  --btn-ab: #e4e7ee;
+  --btn-ab-hover: #f4f5f8;
+  --btn-meta: #dcdee6;
+  --btn-meta-hover: #eceef5;
+  --dpad: #e4e7ee;
+  --dpad-hover: #f4f5f8;
+  --bg: #11141a;
+  --bg-gradient: radial-gradient(circle at 50% 45%, #1e2430 0%, #0f1217 75%);
+  --ambient-halo: rgba(230, 238, 250, 0.20);
+  --shell-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.92), 0 15px 35px -10px rgba(0, 0, 0, 0.6), 0 0 75px rgba(255, 255, 255, 0.10), inset 0 1px 1.5px rgba(255, 255, 255, 0.95);
 }
 
 @theme inline {
   --color-shell: var(--shell);
   --color-shell-dark: var(--shell-dark);
+  --color-shell-border: var(--shell-border);
+  --color-shell-text: var(--shell-text);
+  --color-shell-text-dim: var(--shell-text-dim);
+  --color-shell-ink: var(--shell-ink);
+  --color-shell-well: var(--shell-well);
   --color-bezel: var(--bezel);
   --color-lcd-light: var(--lcd-light);
   --color-lcd-med: var(--lcd-med);
@@ -77,4 +111,5 @@ body {
   background: var(--bg);
   color: #ededed;
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.5s ease-out;
 }

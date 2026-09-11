@@ -26,8 +26,8 @@ export function DPad({ onButtonChange, className }: DPadProps) {
       )}
     >
       {/* Precision Cross Inset Well Background */}
-      <div className="pointer-events-none absolute w-9 h-full bg-black/40 rounded-md shadow-[inset_0_2px_4px_rgba(0,0,0,0.9),0_1px_1px_rgba(255,255,255,0.06)]" />
-      <div className="pointer-events-none absolute h-9 w-full bg-black/40 rounded-md shadow-[inset_0_2px_4px_rgba(0,0,0,0.9),0_1px_1px_rgba(255,255,255,0.06)]" />
+      <div className="pointer-events-none absolute w-9 h-full bg-shell-well rounded-md shadow-[inset_0_2px_4px_rgba(0,0,0,0.9),0_1px_1px_var(--shell-well-rim)]" />
+      <div className="pointer-events-none absolute h-9 w-full bg-shell-well rounded-md shadow-[inset_0_2px_4px_rgba(0,0,0,0.9),0_1px_1px_var(--shell-well-rim)]" />
 
       {/* Up */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
