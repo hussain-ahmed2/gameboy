@@ -8,15 +8,15 @@ import type { Renderer, GamePadState } from '@/lib/types';
 import { SaveState } from '@/engine/core';
 import { GAME_WIDTH, GAME_HEIGHT, HUD_HEIGHT } from '@/lib/constants';
 
-const BIRD_X = 40;
+const BIRD_X = 36;
 const BIRD_SIZE = 8;
-const GRAVITY = 300;
-const FLAP_VELOCITY = -120;
-const TERMINAL_VELOCITY = 200;
+const GRAVITY = 320;
+const FLAP_VELOCITY = -95;
+const TERMINAL_VELOCITY = 160;
 const PIPE_WIDTH = 16;
-const PIPE_GAP = 40;
-const PIPE_SPEED = 60;
-const PIPE_SPACING = 200;
+const PIPE_GAP = 42;
+const PIPE_SPEED = 55;
+const PIPE_SPACING = 96;
 const GROUND_HEIGHT = 16;
 const GROUND_Y = GAME_HEIGHT - GROUND_HEIGHT;
 
@@ -105,7 +105,7 @@ export class FlappyGame extends Game {
     // Bird rotation (visual only)
     if (this.birdVy < 0) {
       this.birdRotation = -1;
-    } else if (this.birdVy > 100) {
+    } else if (this.birdVy > 80) {
       this.birdRotation = 1;
     } else {
       this.birdRotation = 0;
@@ -134,7 +134,7 @@ export class FlappyGame extends Game {
       }
 
       // Remove off-screen pipes
-      if (pipe.x + PIPE_WIDTH < 0) {
+      if (pipe.x + PIPE_WIDTH + 4 < 0) {
         this.pipes.splice(i, 1);
       }
     }
@@ -156,7 +156,9 @@ export class FlappyGame extends Game {
   }
 
   private spawnPipe(): void {
-    const gapY = HUD_HEIGHT + 10 + Math.random() * 50;
+    const minGapY = HUD_HEIGHT + 16;
+    const maxGapY = GROUND_Y - PIPE_GAP - 16;
+    const gapY = minGapY + Math.floor(Math.random() * (maxGapY - minGapY + 1));
     this.pipes.push({ x: GAME_WIDTH, gapY, scored: false });
   }
 
@@ -173,15 +175,17 @@ export class FlappyGame extends Game {
       return true;
     }
 
-    // Pipe collision
+    // Pipe collision with 1px forgiving hitbox for authentic feel
     for (const pipe of this.pipes) {
-      const birdRight = BIRD_X + BIRD_SIZE;
-      const birdBottom = this.birdY + BIRD_SIZE;
+      const birdLeft = BIRD_X + 1;
+      const birdRight = BIRD_X + BIRD_SIZE - 1;
+      const birdTop = this.birdY + 1;
+      const birdBottom = this.birdY + BIRD_SIZE - 1;
 
-      // Check horizontal overlap
-      if (birdRight > pipe.x && BIRD_X < pipe.x + PIPE_WIDTH) {
+      // Check horizontal overlap with pipe body (and collar)
+      if (birdRight > pipe.x - 1 && birdLeft < pipe.x + PIPE_WIDTH + 1) {
         // Check if bird is in the gap
-        if (this.birdY < pipe.gapY || birdBottom > pipe.gapY + PIPE_GAP) {
+        if (birdTop < pipe.gapY || birdBottom > pipe.gapY + PIPE_GAP) {
           return true;
         }
       }
@@ -204,27 +208,59 @@ export class FlappyGame extends Game {
   draw(renderer: Renderer): void {
     renderer.clear(0);
 
-    // Draw pipes
+    // Draw pipes with classic 3D collars and highlights
     for (const pipe of this.pipes) {
-      // Top pipe (start from HUD_HEIGHT to avoid overlapping HUD)
-      renderer.drawRect(pipe.x, HUD_HEIGHT, PIPE_WIDTH, pipe.gapY - HUD_HEIGHT, 2);
-      // Bottom pipe
-      renderer.drawRect(pipe.x, pipe.gapY + PIPE_GAP, PIPE_WIDTH, GROUND_Y - pipe.gapY - PIPE_GAP, 2);
+      const px = Math.floor(pipe.x);
+      const gy = Math.floor(pipe.gapY);
+
+      // Top pipe body
+      renderer.drawRect(px, HUD_HEIGHT, PIPE_WIDTH, gy - HUD_HEIGHT, 2);
+      // Top pipe highlight (left streak)
+      renderer.drawRect(px + 2, HUD_HEIGHT, 2, gy - HUD_HEIGHT, 1);
+      // Top pipe collar / lip at bottom
+      renderer.drawRect(px - 1, gy - 4, PIPE_WIDTH + 2, 4, 3);
+      renderer.drawRect(px + 1, gy - 3, 2, 2, 1);
+
+      // Bottom pipe body
+      renderer.drawRect(px, gy + PIPE_GAP, PIPE_WIDTH, GROUND_Y - gy - PIPE_GAP, 2);
+      // Bottom pipe highlight
+      renderer.drawRect(px + 2, gy + PIPE_GAP, 2, GROUND_Y - gy - PIPE_GAP, 1);
+      // Bottom pipe collar / lip at top
+      renderer.drawRect(px - 1, gy + PIPE_GAP, PIPE_WIDTH + 2, 4, 3);
+      renderer.drawRect(px + 1, gy + PIPE_GAP + 1, 2, 2, 1);
     }
 
     // Draw ground
     renderer.drawRect(0, GROUND_Y, GAME_WIDTH, GROUND_HEIGHT, 2);
     // Ground detail (scrolling strip)
+    const scrollOffset = Math.floor(this.groundScroll);
     for (let x = -8; x < GAME_WIDTH + 8; x += 8) {
-      const drawX = x - this.groundScroll;
+      const drawX = x - scrollOffset;
       renderer.drawRect(drawX, GROUND_Y, 4, 2, 1);
     }
 
-    // Draw bird with rotation effect (visual width/height change)
+    // Draw retro Game Boy bird (8x8 pixel art)
     if (this.flashTimer <= 0 || Math.floor(this.flashTimer * 10) % 2 === 0) {
-      const w = BIRD_SIZE + (this.birdRotation === -1 ? 1 : 0);
-      const h = BIRD_SIZE + (this.birdRotation === 1 ? 1 : 0);
-      renderer.drawRect(BIRD_X, this.birdY, w, h, 3);
+      const bx = Math.floor(BIRD_X);
+      const by = Math.floor(this.birdY);
+      const flapping = this.birdVy < 0;
+
+      // Body (dark shade)
+      renderer.drawRect(bx + 1, by + 1, 6, 6, 3);
+      // Belly highlight
+      renderer.drawRect(bx + 2, by + 4, 3, 2, 2);
+      // Big retro eye
+      renderer.drawRect(bx + 4, by + 1, 2, 2, 0);
+      renderer.drawRect(bx + 5, by + 2, 1, 1, 3);
+      // Beak
+      renderer.drawRect(bx + 6, by + 3, 2, 2, 2);
+      renderer.drawRect(bx + 7, by + 4, 1, 1, 3);
+      // Wing flaps up when ascending, tucks when falling
+      if (flapping) {
+        renderer.drawRect(bx + 1, by, 3, 2, 1);
+      } else {
+        renderer.drawRect(bx + 1, by + 3, 3, 2, 1);
+      }
     }
 
     // HUD separator
