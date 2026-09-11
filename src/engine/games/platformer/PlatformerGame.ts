@@ -108,6 +108,7 @@ export class PlatformerGame extends Game {
   private levelCompleteTimer = 0;
   private highScore = 0;
   private levelTiles: number[][] = [];
+  private lastJumpState = false;
 
   init(): void {
     // Load high score
@@ -178,6 +179,7 @@ export class PlatformerGame extends Game {
     this.onGround = false;
     this.coyoteTimer = 0;
     this.jumpBufferTimer = 0;
+    this.lastJumpState = false;
     this.levelComplete = false;
     this.levelCompleteTimer = 0;
   }
@@ -219,8 +221,11 @@ export class PlatformerGame extends Game {
       this.player.flipX = moveX < 0;
     }
 
-    // Jump buffering
-    if (input.a) {
+    // Jump buffering — rising-edge only (first frame A goes from up to down)
+    // Using held-state would keep refilling the buffer every tick, causing multi-jumps
+    const jumpJustPressed = (input.a || input.up) && !(this.lastJumpState);
+    this.lastJumpState = input.a || input.up;
+    if (jumpJustPressed) {
       this.jumpBufferTimer = JUMP_BUFFER;
     } else {
       this.jumpBufferTimer -= deltaTime;
