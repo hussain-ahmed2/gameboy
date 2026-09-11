@@ -13,9 +13,9 @@ const GRID_WIDTH = GAME_WIDTH / GRID_SIZE;
 const GRID_HEIGHT = GAME_HEIGHT / GRID_SIZE;
 const HUD_GRID_Y = Math.ceil(HUD_HEIGHT / GRID_SIZE); // 2 rows for HUD
 const PLAY_TOP = HUD_GRID_Y; // first playable row
-const BASE_SPEED = 150;
+const BASE_SPEED = 250;    // ms between moves (~4 moves/sec — classic Nokia Snake feel)
 const SPEED_INCREASE = 0.95;
-const MIN_SPEED = 50;
+const MIN_SPEED = 80;      // fastest possible (was 50 — too frantic)
 
 const HIGHSCORE_KEY = 'snake_highscore';
 
