@@ -1,29 +1,39 @@
-# GameBoy Game Engine
+# 🎮 GameBoy Web Engine
 
-A **GameBoy-inspired game engine** built with Next.js 16, React 19, Tailwind CSS v4, and TypeScript. Write games in TypeScript - no ROMs, no assembly, no external tools. The engine provides a GameBoy-compatible API (160×144, 4-color palette, sprites, tilemaps, input, audio) and runs your TypeScript game code at 60 FPS.
+![Gameplay Screenshot](docs/gameplay.png)
 
-## Features
+A **GameBoy-inspired game engine** built with Next.js 14, React 18, Tailwind CSS v4, and TypeScript. Write games in TypeScript - no ROMs, no assembly, no external tools. The engine provides a GameBoy-compatible API (160×144, 4-color palette, sprites, tilemaps, input, audio) and runs your TypeScript game code at a smooth 60 FPS.
 
-- **TypeScript Game API** — Sprites, TileMaps, Entities, Input, Audio
-- **Authentic DMG Look** — 160×144 resolution, 4-shade green palette, scanlines
-- **Built-in Games** — Pong, Snake, Platformer (all written in TypeScript)
-- **Game Selector** — Switch between games instantly
-- **Save States** — Persist game progress to localStorage
-- **Keyboard + Touch** — Play on desktop or mobile
-- **60 FPS Fixed Timestep** — Deterministic game loop
+## ✨ Features
 
-## Tech Stack
+- **Authentic DMG Hardware UI** — Tactile, responsive on-screen D-pad and Action buttons designed to feel instantaneous.
+- **Custom Hardware Shells** — Swap between Noir, Kiwi, and Pure White hardware chassis themes.
+- **Display Palettes** — Choose between Original DMG, Pocket, and Light screen color palettes.
+- **TypeScript Game API** — Sprites, TileMaps, Entities, Input, Audio wrapper.
+- **Built-in Games** — Pong, Snake, Snake 2, Tetris, Bomberman, Platformer (all written purely in TypeScript).
+- **Save States & Configs** — Persist game progress and user UI configurations to `localStorage` (with zero Next.js SSR hydration flashes).
+- **Keyboard + Touch** — Play smoothly on desktop or mobile.
+- **60 FPS Fixed Timestep** — Deterministic `requestAnimationFrame` game loop.
+
+## 📸 Menu Interface
+
+![Menu Screenshot](docs/menu.png)
+*(Game selection menu showing the custom screen palette)*
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 16 (App Router) |
-| UI | React 19 |
+| Framework | Next.js 14 (App Router) |
+| UI | React 18 (`useSyncExternalStore` for config) |
 | Styling | Tailwind CSS v4 (CSS-first theme) |
 | Language | TypeScript 5 (strict) |
 | Testing | Vitest (unit) + Playwright (E2E) |
 | Package Manager | pnpm |
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -33,8 +43,8 @@ A **GameBoy-inspired game engine** built with Next.js 16, React 19, Tailwind CSS
 ### Installation
 
 ```bash
-git clone git@github.com-personal:hussain-ahmed2/gameboy.git
-cd gameboy
+git clone https://github.com/hussain-ahmed2/gameboy-web-engine.git
+cd gameboy-web-engine
 pnpm install
 ```
 
@@ -46,21 +56,21 @@ pnpm dev
 
 Open [http://localhost:4000](http://localhost:4000) in your browser.
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── layout.tsx          # Root layout (fonts, metadata)
+│   ├── layout.tsx          # Root layout (fonts, metadata, SEO)
 │   ├── page.tsx            # Home page (GameBoy shell + game selector)
-│   └── globals.css         # DMG theme palette
+│   └── globals.css         # Base styles
 │
 ├── engine/                 # Game engine core
 │   ├── core/
 │   │   ├── GameLoop.ts     # 60 FPS fixed timestep loop
-│   │   ├── Renderer.ts     # Canvas 2D with DMG palette
+│   │   ├── Renderer.ts     # Canvas 2D with DMG palette mappings
 │   │   ├── Input.ts        # Keyboard/Touch → GamePad state
-│   │   ├── Audio.ts        # Web Audio API wrapper
+│   │   ├── Audio.ts        # Web Audio API wrapper (Beeps, Boops, Noise)
 │   │   └── SaveState.ts    # localStorage persistence
 │   │
 │   ├── api/
@@ -68,41 +78,33 @@ src/
 │   │   ├── Sprite.ts       # Sprite with position, animation
 │   │   ├── TileMap.ts      # Background tile maps
 │   │   ├── Entity.ts       # Game entities with components
-│   │   ├── GamePad.ts      # Input state (D-pad, A, B, Start, Select)
 │   │   └── Sound.ts        # Sound effects / music
 │   │
 │   └── games/              # Built-in games
 │       ├── registry.ts     # Game registry & dynamic loading
-│       ├── pong/
-│       │   └── PongGame.ts
-│       ├── snake/
-│       │   └── SnakeGame.ts
-│       └── platformer/
-│           └── PlatformerGame.ts
+│       ├── snake2/         # Classic Snake 2
+│       ├── tetris/         # Tetris Clone
+│       ├── bomberman/      # Bomberman Clone
+│       └── platformer/     # Jump & Run
 │
 ├── features/
 │   ├── ui/                 # React components
-│   │   ├── shell/          # GameBoy DMG shell
-│   │   ├── screen/         # Canvas display + effects
-│   │   ├── controls/       # D-pad, A/B, Start/Select
-│   │   ├── toolbar/        # Game selector, pause, reset, volume
-│   │   └── status/         # Power LED, FPS, game info
+│   │   ├── shell/          # GameBoy chassis styling
+│   │   ├── screen/         # Canvas display + CRT effects
+│   │   └── controls/       # Tactile D-pad, A/B, Start/Select buttons
 │   │
-│   └── store/              # React Context for UI state
+│   └── store/              # React Context for Engine state
 │
 ├── hooks/
 │   ├── useEngine.ts        # Engine lifecycle hook
-│   ├── useKeyboard.ts      # Keyboard input
-│   ├── useTouch.ts         # Touch input
-│   └── useRaf.ts           # requestAnimationFrame loop
+│   └── useLocalStorage.ts  # SSR-safe local storage hook
 │
 └── lib/
     ├── types.ts            # Shared TypeScript interfaces
-    ├── constants.ts        # Screen size, palette, key mapping
-    └── cn.ts               # Class name utility
+    └── constants.ts        # Screen size, palette, key mapping
 ```
 
-## Game API
+## 🎮 Game API Example
 
 ### Base Game Class
 ```typescript
@@ -128,51 +130,7 @@ export class MyGame extends Game {
 }
 ```
 
-### Key Classes
-
-| Class | Purpose |
-|-------|---------|
-| `Game` | Extend to create games (`init`, `update`, `draw`) |
-| `Sprite` | Animated sprite with position, velocity, frames |
-| `TileMap` | Background layers with collision data |
-| `Entity` | Composable game objects (position, components) |
-| `Input` | GamePad state (D-pad, A, B, Start, Select) |
-| `Audio` | Play sound effects, music via Web Audio |
-| `Renderer` | Draw sprites, tilemaps, text to canvas |
-
-## Built-in Games
-
-| Game | Description |
-|------|-------------|
-| **Pong** | Classic 2-player paddle game |
-| **Snake** | Eat food, grow, don't hit walls |
-| **Platformer** | Jump, collect coins, reach goal |
-
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start dev server on port 4000 |
-| `pnpm build` | Production build |
-| `pnpm start` | Start production server on port 4000 |
-| `pnpm test` | Run unit tests (Vitest watch) |
-| `pnpm test:run` | Run unit tests (single run) |
-| `pnpm test:coverage` | Run tests with coverage |
-| `pnpm test:e2e` | Run E2E tests (Playwright) |
-| `pnpm test:e2e:ui` | Playwright interactive UI |
-| `pnpm test:all` | Run all tests |
-| `pnpm lint` | Run ESLint |
-
-## Color Palette (DMG Authentic)
-
-| Name | Hex | Usage |
-|------|-----|-------|
-| Lightest | `#9bbc0f` | Color 0 (background) |
-| Light | `#8bac0f` | Color 1 |
-| Dark | `#306230` | Color 2 |
-| Darkest | `#0f380f` | Color 3 (foreground) |
-
-## Controls
+## 🕹️ Controls
 
 ### Keyboard
 | Key | Action |
@@ -180,12 +138,13 @@ export class MyGame extends Game {
 | Arrow Keys | D-pad |
 | Z | A Button |
 | X | B Button |
-| Enter | Start |
-| Right Shift | Select |
+| Enter / ESC | Start (Pause/Select Game) |
+| Right Shift | Select (Cycle Display Palettes) |
+| M | Toggle Audio Mute |
 
 ### Touch (Mobile)
-On-screen D-pad and A/B/Start/Select buttons.
+Fully responsive on-screen D-pad and Action buttons designed to prevent ghost-touches and offer immediate feedback.
 
-## License
+## 📝 License
 
 MIT
