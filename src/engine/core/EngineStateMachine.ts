@@ -309,31 +309,34 @@ export class EngineStateMachine {
   private drawMenu(renderer: RendererType): void {
     renderer.clear(0);
 
-    // Title: "SELECT GAME" centered
-    renderer.drawTextCentered('SELECT GAME', 6, 3);
+    // Title: "SELECT GAME" centered in 26px header (y=0 to 26)
+    renderer.drawTextCentered('SELECT GAME', 9, 3);
 
-    // Separator line
-    renderer.drawLine(8, 18, SCREEN_WIDTH - 16, 3);
+    // Top separator line (Header height: exactly 26px)
+    renderer.drawLine(8, 26, SCREEN_WIDTH - 16, 3);
 
-    // Game list: up to 6 items visible, each 30px tall
+    // Game list: 7 items with more height (itemH: 32px, boxH: 28px)
+    // 8px top gap (y=26 to 34) and 8px bottom gap (y=254 to 262)
     const games = this.context.games;
-    const startY = 24;
-    const itemH = 30;
+    const startY = 34;
+    const itemH = 32;
     const maxVisible = 7;
 
     for (let i = 0; i < maxVisible && i + this.menuScrollOffset < games.length; i++) {
       const idx = i + this.menuScrollOffset;
       const game = games[idx];
-      const y = startY + i * itemH;
+      const boxY = startY + i * itemH;
+      const boxH = 28;
       const sel = idx === this.menuIndex;
 
       if (sel) {
-        // Highlight bar
-        renderer.drawRect(4, y - 2, SCREEN_WIDTH - 8, itemH - 4, 3);
+        // Highlight bar with expanded 28px height
+        renderer.drawRect(4, boxY, SCREEN_WIDTH - 8, boxH, 3);
       }
 
-      // Game name (8x8 font)
-      renderer.drawText(game.name, 12, y, sel ? 0 : 3);
+      // Title at boxY + 5: generous equal 5px top and bottom padding
+      const titleY = game.description ? boxY + 5 : boxY + 10;
+      renderer.drawText(game.name, 12, titleY, sel ? 0 : 3);
 
       // Description (max 35 chars to fit 320px at 8px/char + 1 spacing)
       if (game.description) {
@@ -341,15 +344,16 @@ export class EngineStateMachine {
         const desc = game.description.length > maxDescChars
           ? game.description.substring(0, maxDescChars - 1) + '.'
           : game.description;
-        renderer.drawText(desc, 12, y + 10, sel ? 1 : 2);
+        // boxY + 15: ends at boxY + 23, leaving equal 5px bottom padding in 28px box
+        renderer.drawText(desc, 12, boxY + 15, sel ? 1 : 2);
       }
     }
 
-    // Separator before hints
-    renderer.drawLine(8, SCREEN_HEIGHT - 26, SCREEN_WIDTH - 16, 3);
+    // Bottom separator line (Footer height: exactly 26px, from y=262 to 288)
+    renderer.drawLine(8, 262, SCREEN_WIDTH - 16, 3);
 
-    // Controls hint
-    renderer.drawTextCentered('UP/DN:SELECT A/ST:GO', SCREEN_HEIGHT - 20, 2);
+    // Controls hint centered in 26px footer (y=271, 9px top & 9px bottom)
+    renderer.drawTextCentered('UP/DN:SELECT A/ST:GO', 271, 2);
   }
 
   private drawGameSelect(renderer: RendererType): void {
