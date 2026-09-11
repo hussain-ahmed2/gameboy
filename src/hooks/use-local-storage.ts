@@ -1,38 +1,52 @@
-import { useState } from "react";
+import { useSyncExternalStore, useCallback, useMemo } from "react";
+
+// The 'storage' event only triggers when other tabs change localStorage.
+// We use this Set to notify the current tab of changes we make locally.
+const subscribers = new Set<() => void>();
+
+function emitChange() {
+  subscribers.forEach((callback) => callback());
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  subscribers.add(callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    subscribers.delete(callback);
+  };
+}
 
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === "undefined") {
-      return initialValue;
-    }
+  const getSnapshot = useCallback(() => window.localStorage.getItem(key), [key]);
+  const getServerSnapshot = useCallback(() => null, []);
+
+  const storeValue = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  const parsedValue = useMemo(() => {
+    if (storeValue === null) return initialValue;
     try {
-      const item = window.localStorage.getItem(key);
-      if (item !== null) {
-        try {
-          return JSON.parse(item);
-        } catch {
-          // Fallback for legacy values that were saved as raw strings instead of JSON strings
-          return item as unknown as T;
+      return JSON.parse(storeValue);
+    } catch {
+      // Fallback for legacy values that were saved as raw strings
+      return storeValue as unknown as T;
+    }
+  }, [storeValue, initialValue]);
+
+  const setValue = useCallback(
+    (value: T | ((val: T) => T)) => {
+      try {
+        const valueToStore = value instanceof Function ? value(parsedValue) : value;
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          emitChange(); // Trigger re-render in current tab
         }
+      } catch (error) {
+        console.warn(`Error setting localStorage key "${key}":`, error);
       }
-      return initialValue;
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
-    }
-  });
+    },
+    [key, parsedValue]
+  );
 
-  const setValue = (value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
-      }
-    } catch (error) {
-      console.warn(`Error setting localStorage key "${key}":`, error);
-    }
-  };
-
-  return [storedValue, setValue];
+  return [parsedValue, setValue];
 }
