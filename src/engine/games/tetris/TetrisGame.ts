@@ -42,6 +42,13 @@ interface TetrisSaveState {
   fallTimer: number;
   lockDelay: number;
   isLocking: boolean;
+  readyTimer: number;
+  leftHeld: boolean;
+  rightHeld: boolean;
+  leftDasTimer: number;
+  rightDasTimer: number;
+  leftArrTimer: number;
+  rightArrTimer: number;
 }
 
 const TETROMINOES: Record<TetrominoType, number[][]> = {
@@ -112,11 +119,22 @@ export class TetrisGame extends Game {
   private lockDelay = 0;
   private lockDelayMax = 500;
   private isLocking = false;
+  private readyTimer = 0;
 
   private inputLeft = false;
   private inputRight = false;
   private inputUp = false;
   private inputA = false;
+
+  // DAS (Delayed Auto Shift) for held left/right
+  private dasDelay = 170;  // ms before auto-repeat starts
+  private arrRate = 50;    // ms between auto-repeat moves
+  private leftDasTimer = 0;
+  private rightDasTimer = 0;
+  private leftArrTimer = 0;
+  private rightArrTimer = 0;
+  private leftHeld = false;
+  private rightHeld = false;
 
   init(): void {
     const saved = SaveState.load(HIGHSCORE_KEY);
@@ -135,6 +153,7 @@ export class TetrisGame extends Game {
     this.fallTimer = 0;
     this.lockDelay = 0;
     this.isLocking = false;
+    this.readyTimer = 2.0;
 
     this.nextType = this.randomType();
     this.spawnPiece();
@@ -148,15 +167,55 @@ export class TetrisGame extends Game {
       return;
     }
 
+    // Ready state — freeze gameplay
+    if (this.readyTimer > 0) {
+      this.readyTimer -= deltaTime;
+      return;
+    }
+
     const dtMs = deltaTime * 1000;
 
+    // Left DAS
     if (input.left && !this.inputLeft) {
       this.movePiece(-1, 0);
+      this.leftHeld = true;
+      this.leftDasTimer = 0;
+      this.leftArrTimer = 0;
+    } else if (input.left && this.leftHeld) {
+      this.leftDasTimer += dtMs;
+      if (this.leftDasTimer >= this.dasDelay) {
+        this.leftArrTimer += dtMs;
+        if (this.leftArrTimer >= this.arrRate) {
+          this.movePiece(-1, 0);
+          this.leftArrTimer -= this.arrRate;
+        }
+      }
+    } else if (!input.left) {
+      this.leftHeld = false;
+      this.leftDasTimer = 0;
+      this.leftArrTimer = 0;
     }
     this.inputLeft = input.left;
 
+    // Right DAS
     if (input.right && !this.inputRight) {
       this.movePiece(1, 0);
+      this.rightHeld = true;
+      this.rightDasTimer = 0;
+      this.rightArrTimer = 0;
+    } else if (input.right && this.rightHeld) {
+      this.rightDasTimer += dtMs;
+      if (this.rightDasTimer >= this.dasDelay) {
+        this.rightArrTimer += dtMs;
+        if (this.rightArrTimer >= this.arrRate) {
+          this.movePiece(1, 0);
+          this.rightArrTimer -= this.arrRate;
+        }
+      }
+    } else if (!input.right) {
+      this.rightHeld = false;
+      this.rightDasTimer = 0;
+      this.rightArrTimer = 0;
     }
     this.inputRight = input.right;
 
@@ -273,6 +332,15 @@ export class TetrisGame extends Game {
 
     renderer.drawText('TETRIS', 4, 2, 3);
 
+    renderer.drawText(`HIGH`, 4, FIELD_Y + 8, 2);
+    renderer.drawText(`${this.highScore}`, 4, FIELD_Y + 16, 3);
+    renderer.drawText(`SCORE`, 4, FIELD_Y + 32, 2);
+    renderer.drawText(`${this._score}`, 4, FIELD_Y + 40, 3);
+    renderer.drawText(`LEVEL`, 4, FIELD_Y + 56, 2);
+    renderer.drawText(`${this._level}`, 4, FIELD_Y + 64, 3);
+    renderer.drawText(`LINES`, 4, FIELD_Y + 80, 2);
+    renderer.drawText(`${this._lines}`, 4, FIELD_Y + 88, 3);
+
     const nextShape = TETROMINOES[this.nextType];
     const nextColor = PIECE_COLORS[this.nextType] as 0 | 1 | 2 | 3;
     const previewX = FIELD_X + COLS * TILE + 6;
@@ -291,12 +359,10 @@ export class TetrisGame extends Game {
       }
     }
 
-    renderer.drawText(`SCORE`, 4, FIELD_Y + 8, 2);
-    renderer.drawText(`${this._score}`, 4, FIELD_Y + 16, 3);
-    renderer.drawText(`LEVEL`, 4, FIELD_Y + 32, 2);
-    renderer.drawText(`${this._level}`, 4, FIELD_Y + 40, 3);
-    renderer.drawText(`LINES`, 4, FIELD_Y + 56, 2);
-    renderer.drawText(`${this._lines}`, 4, FIELD_Y + 64, 3);
+    // Get-ready overlay
+    if (this.readyTimer > 0) {
+      renderer.drawTextCentered('GET READY', GAME_HEIGHT / 2 - 4, 3);
+    }
   }
 
   getScore(): number {
@@ -324,6 +390,13 @@ export class TetrisGame extends Game {
       fallTimer: this.fallTimer,
       lockDelay: this.lockDelay,
       isLocking: this.isLocking,
+      readyTimer: this.readyTimer,
+      leftHeld: this.leftHeld,
+      rightHeld: this.rightHeld,
+      leftDasTimer: this.leftDasTimer,
+      rightDasTimer: this.rightDasTimer,
+      leftArrTimer: this.leftArrTimer,
+      rightArrTimer: this.rightArrTimer,
     };
   }
 
@@ -347,6 +420,13 @@ export class TetrisGame extends Game {
     this.fallTimer = s.fallTimer;
     this.lockDelay = s.lockDelay ?? 0;
     this.isLocking = s.isLocking ?? false;
+    this.readyTimer = s.readyTimer ?? 0;
+    this.leftHeld = s.leftHeld ?? false;
+    this.rightHeld = s.rightHeld ?? false;
+    this.leftDasTimer = s.leftDasTimer ?? 0;
+    this.rightDasTimer = s.rightDasTimer ?? 0;
+    this.leftArrTimer = s.leftArrTimer ?? 0;
+    this.rightArrTimer = s.rightArrTimer ?? 0;
     this._gameOver = false;
   }
 
@@ -370,6 +450,7 @@ export class TetrisGame extends Game {
     this.isLocking = false;
     this.lockDelay = 0;
     this.fallTimer = 0;
+    this.resetDas();
 
     if (this.collides(this.current.shape, this.current.x, this.current.y)) {
       this._gameOver = true;
@@ -404,6 +485,17 @@ export class TetrisGame extends Game {
       return true;
     }
     return false;
+  }
+
+  private resetDas(): void {
+    this.leftHeld = false;
+    this.rightHeld = false;
+    this.leftDasTimer = 0;
+    this.rightDasTimer = 0;
+    this.leftArrTimer = 0;
+    this.rightArrTimer = 0;
+    this.inputLeft = false;
+    this.inputRight = false;
   }
 
   private rotatePiece(): void {
