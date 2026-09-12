@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Press_Start_2P } from "next/font/google";
+import { SerwistProvider } from "@/features/pwa";
 import "./globals.css";
 
 const geistMono = Geist_Mono({
@@ -31,6 +32,15 @@ export const metadata: Metadata = {
   keywords: ["GameBoy", "Emulator", "React", "Next.js", "TypeScript", "Retro Games", "Web Game Engine", "Tetris", "Snake", "Space Invaders", "Bomberman", "Flappy Bird"],
   authors: [{ name: "Hussain Ahmed", url: "https://github.com/hussain-ahmed2" }],
   creator: "Hussain Ahmed",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "GameBoy",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
     title: "GameBoy Game Engine - Web-based Retro Console",
     description: "A fully playable GameBoy-inspired game engine built with React and TypeScript.",
@@ -57,7 +67,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${geistMono.variable} ${pressStart.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SerwistProvider swUrl="/serwist/sw.js">{children}</SerwistProvider>
+      </body>
     </html>
   );
 }
