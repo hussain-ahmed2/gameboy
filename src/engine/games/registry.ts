@@ -13,6 +13,7 @@ import { TetrisGame } from './tetris/TetrisGame';
 import { InvaderGame } from './invaders/InvaderGame';
 import { BombermanGame } from './bomberman/BombermanGame';
 import { Snake2Game } from './snake2/Snake2Game';
+import { SpaceImpactGame } from './spaceimpact/SpaceImpactGame';
 
 export interface GameInfo {
   id: string;
@@ -75,6 +76,12 @@ export const gameRegistry: GameInfo[] = [
     name: 'SNAKE II',
     description: 'Enhanced snake with portals and power-ups',
     create: () => new Snake2Game(),
+  },
+  {
+    id: 'spaceimpact',
+    name: 'SPACE IMPACT',
+    description: 'Nokia classic space shooter',
+    create: () => new SpaceImpactGame(),
   },
 ];
 

@@ -10,7 +10,8 @@ A **GameBoy-inspired game engine** built with Next.js 16, React 19, Tailwind CSS
 - **Custom Hardware Shells** — Swap between Noir, Kiwi, and Pure White hardware chassis themes.
 - **Display Palettes** — Choose between Original DMG, Pocket, and Light screen color palettes.
 - **TypeScript Game API** — Sprites, TileMaps, Entities, Input, Audio wrapper.
-- **Built-in Games** — Play included classics like Snake, Snake 2, Tetris, Bomberman, Pong, Breakout, Space Invaders, Flappy Bird, and Platformer.
+- **Built-in Games** — Play included classics like Snake, Snake 2, Tetris, Bomberman, Pong, Breakout, Space Invaders, Space Impact, Flappy Bird, and Platformer.
+- **Offline PWA Support** — Install the engine as a Progressive Web App (PWA) to play offline anywhere, powered by `serwist`.
 - **Save States & Configs** — Persist game progress and user UI configurations to `localStorage` (with zero Next.js SSR hydration flashes).
 - **Keyboard + Touch** — Play smoothly on desktop or mobile.
 - **60 FPS Fixed Timestep** — Deterministic `requestAnimationFrame` game loop.
@@ -93,6 +94,7 @@ src/
 │       ├── pong/
 │       ├── snake/
 │       ├── snake2/
+│       ├── spaceimpact/
 │       └── tetris/
 │
 ├── features/
