@@ -211,16 +211,37 @@ function GameBoyContent() {
             <footer className="mt-4 flex flex-col items-center justify-center gap-2.5 text-white/50 select-none">
                 <div className="flex flex-wrap items-center justify-center gap-3">
                     <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
-                        START / ESC: PAUSE
+                        Z: A BUTTON
                     </span>
-                    <span>•</span>
-                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">P: SLEEP</span>
                     <span>•</span>
                     <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
-                        M / SELECT: PALETTE
+                        X: B BUTTON
                     </span>
                     <span>•</span>
-                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">S: SOUND</span>
+                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
+                        ARROWS: D-PAD
+                    </span>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
+                        ENTER: START
+                    </span>
+                    <span>•</span>
+                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
+                        SHIFT: SELECT
+                    </span>
+                    <span>•</span>
+                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
+                        ESC / P: PAUSE
+                    </span>
+                    <span>•</span>
+                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
+                        M: PALETTE
+                    </span>
+                    <span>•</span>
+                    <span className="font-sans font-bold text-[10px] tracking-wider text-white/70">
+                        S: SOUND
+                    </span>
                 </div>
 
                 {/* Made By Credit & GitHub Profile Link */}

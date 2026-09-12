@@ -300,7 +300,8 @@ export class FlappyGame extends Game {
     renderer.drawRect(0, HUD_HEIGHT, GAME_WIDTH, 1, 2);
 
     // Draw score
-    renderer.drawText(`${this._score}`, GAME_WIDTH / 2 - 4, 4, 3);
+    renderer.drawText(`SCORE:${this._score}`, 4, 4, 3);
+    renderer.drawText(`HIGH:${this.highScore}`, 90, 4, 2);
 
     // Game over overlay
     if (this._gameOver) {
